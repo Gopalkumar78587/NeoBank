@@ -1,0 +1,45 @@
+@use '../../../../../styles/tokens' as t;
+
+:host { display: block; }
+
+.es {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--gray-500);
+  gap: 6px;
+}
+
+.es-compact { padding: 28px 16px; }
+
+.es-icon {
+  font-size: 56px;
+  color: var(--primary-200, #c7d2fe);
+  background: var(--primary-50, #eef2ff);
+  width: 80px; height: 80px;
+  border-radius: t.$radius-full;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+}
+
+.es-compact .es-icon { font-size: 40px; width: 60px; height: 60px; margin-bottom: 4px; }
+
+.es-title {
+  margin: 0;
+  color: var(--gray-800);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.es-hint {
+  margin: 2px 0 0;
+  font-size: .85rem;
+  color: var(--gray-500);
+  max-width: 36ch;
+  line-height: 1.5;
+}
+
+.es-cta:not(:empty) { margin-top: t.$space-4; }

@@ -1,0 +1,39 @@
+﻿.admin-container { max-width: 1400px; margin: 0 auto; padding: 24px 32px 40px; background: #f5f7fb; min-height: calc(100vh - 64px); }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px; }
+.page-header h2 { font-size: 1.8rem; font-weight: 800; color: #1a1a2e; margin: 0; }
+.filter-row { display: flex; align-items: center; gap: 10px; }
+.filter-row label { font-weight: 700; color: #555; font-size: 0.88rem; }
+.filter-select { padding: 9px 14px; border: 2px solid #e0e7ff; border-radius: 10px; font-size: 0.88rem; background: #fff; }
+.alert { display: flex; align-items: center; gap: 10px; padding: 13px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 500; }
+.alert.success { background: #e8f5e9; color: #1b5e20; border-left: 4px solid #43a047; }
+.alert.error { background: #fce4ec; color: #c62828; border-left: 4px solid #e53935; }
+.loading, .no-data { text-align: center; padding: 50px; color: #aaa; background: #fff; border-radius: 16px; border: 2px dashed #e8eaf6; }
+.data-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 16px; overflow: hidden; border: 1.5px solid #e8eaf6; box-shadow: 0 4px 20px rgba(0,0,0,.06); }
+.data-table th { background: #f5f7ff; padding: 13px 16px; text-align: left; font-weight: 700; font-size: 0.78rem; color: #666; text-transform: uppercase; }
+.data-table td { padding: 14px 16px; border-top: 1px solid #f5f5f5; font-size: 0.9rem; }
+.data-table tr:hover td { background: #f8faff; }
+.mini-badge { padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; }
+.badge-pending { background: #fff3e0; color: #e65100; }
+.badge-approved { background: #e8f5e9; color: #1b5e20; }
+.badge-rejected { background: #fce4ec; color: #c62828; }
+.btn-decide { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg,#4f46e5,#4338ca); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.btn-decide:hover { background: linear-gradient(135deg,#4338ca,#312e81); }
+.decided-text { font-size: 0.78rem; color: #999; font-style: italic; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.modal { background: #fff; border-radius: 20px; width: 100%; max-width: 500px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.22); }
+.modal h3 { font-size: 1.1rem; font-weight: 800; margin: 0; padding: 20px 24px; background: linear-gradient(135deg,#4338ca,#4f46e5); color: #fff; }
+.review-info { padding: 18px 24px; background: #f8f9ff; border-bottom: 1px solid #eee; }
+.review-info p { margin: 5px 0; font-size: 0.88rem; color: #444; }
+.form-group { margin: 16px 24px; }
+.form-group label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.88rem; color: #333; }
+.form-input { width: 100%; padding: 11px 14px; border: 2px solid #e0e7ff; border-radius: 10px; font-size: 0.92rem; resize: vertical; box-sizing: border-box; background: #f8faff; }
+.form-input:focus { border-color: #4f46e5; outline: none; background: #fff; }
+.decision-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 24px 16px; }
+.decision-toggle button { padding: 13px; border: 2px solid #e0e7ff; border-radius: 12px; background: #f8f9ff; font-weight: 700; cursor: pointer; font-size: 0.88rem; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.decision-toggle button.selected { background: #e8f5e9; border-color: #4caf50; color: #1b5e20; box-shadow: 0 4px 12px rgba(76,175,80,.2); }
+.decision-toggle button.selected-reject { background: #fce4ec; border-color: #e53935; color: #c62828; box-shadow: 0 4px 12px rgba(229,57,53,.2); }
+.btn-row { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid #f0f0f0; background: #fafafa; }
+.btn-primary { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg,#4f46e5,#4338ca); color: #fff; border: none; padding: 11px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+.btn-primary:hover:not(:disabled) { background: linear-gradient(135deg,#4338ca,#312e81); }
+.btn-primary:disabled { background: #90caf9; cursor: not-allowed; }
+.btn-secondary { background: #f5f5f5; color: #333; border: 1.5px solid #ddd; padding: 11px 22px; border-radius: 10px; font-weight: 600; cursor: pointer; }

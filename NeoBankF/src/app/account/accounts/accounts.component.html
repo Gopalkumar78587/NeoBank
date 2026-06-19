@@ -1,0 +1,319 @@
+<div class="acc-page page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">My Accounts</h1>
+      <p class="page-subtitle">Open and manage your Savings &amp; Current accounts.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="!isKycComplete"
+            [title]="isKycComplete ? 'Open a new account' : 'Complete KYC first to open an account'">
+      <span class="material-icons-outlined">add_circle</span> Open New Account
+    </button>
+  </div>
+
+  <!-- KYC Gate Banner -->
+  <div class="alert warn" *ngIf="!isKycComplete">
+    <span class="material-icons-outlined">warning</span>
+    <div>
+      <strong>KYC verification required</strong>
+      <p>Per RBI guidelines, you must complete KYC (Aadhaar, PAN &amp; Date of Birth) before opening a new bank account.</p>
+    </div>
+    <a routerLink="/user/profile" class="btn btn-secondary btn-sm">
+      <span class="material-icons-outlined">badge</span> Complete KYC
+    </a>
+  </div>
+
+  <!-- Success / Error -->
+  <div class="alert ok" *ngIf="successMessage">
+    <span class="material-icons-outlined">check_circle</span> {{ successMessage }}
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-3 mt-md" *ngIf="accounts.length > 0">
+    <div class="stat-card">
+      <div class="stat-label">Total Balance (Active)</div>
+      <div class="stat-value">{{ formatINR(totalBalance()) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Accounts</div>
+      <div class="stat-value">{{ activeCount() }} <small *ngIf="pendingCount() > 0" style="font-size:.75rem;color:#f59e0b;font-weight:600">+ {{ pendingCount() }} pending</small></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">KYC Status</div>
+      <div class="stat-value" style="font-size:1.4rem">
+        <span class="badge" [ngClass]="isKycComplete ? 'badge-success' : 'badge-warning'">
+          {{ isKycComplete ? 'Verified' : 'Pending' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account cards -->
+  <div class="acc-cards mt-lg" *ngIf="accounts.length > 0">
+    <div class="acc-card" *ngFor="let a of accounts"
+      [class.savings]="a.accountType==='SAVINGS'"
+      [class.current]="a.accountType==='CURRENT'"
+      [class.pending]="a.status==='PENDING_APPROVAL'"
+      [class.rejected]="a.status==='REJECTED'">
+      <div class="acc-card-top">
+        <div class="acc-chip"><span class="material-icons-outlined">contactless</span></div>
+        <span class="badge" [ngClass]="badgeFor(a.status)" style="background: rgba(255,255,255,.22); color: white;">{{ statusLabel(a.status) }}</span>
+      </div>
+      <div class="acc-card-mid">
+        <div class="acc-label">Account Number</div>
+        <div class="acc-num">{{ a.accountNumber }}</div>
+      </div>
+      <div class="acc-card-bot">
+        <div>
+          <div class="acc-label">{{ a.status === 'PENDING_APPROVAL' ? 'Pending Deposit' : 'Available Balance' }}</div>
+          <div class="acc-bal">{{ formatINR(a.status === 'PENDING_APPROVAL' ? (a.pendingDeposit || 0) : a.balance) }}</div>
+        </div>
+        <div class="acc-type-pill">{{ a.accountType }}</div>
+      </div>
+      <div *ngIf="a.status === 'PENDING_APPROVAL'" class="pending-note">
+        <span class="material-icons-outlined">hourglass_top</span>
+        Awaiting admin approval. You'll be notified once it's activated.
+      </div>
+      <div *ngIf="a.status === 'REJECTED'" class="pending-note rejected">
+        <span class="material-icons-outlined">block</span>
+        {{ a.rejectionReason || 'Application rejected by admin' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="card mt-lg" *ngIf="accounts.length === 0">
+    <div class="empty-state">
+      <span class="material-icons-outlined">account_balance_wallet</span>
+      <h3>No accounts yet</h3>
+      <p>Open your first NeoBank360 account in under a minute.</p>
+      <button class="btn btn-primary mt-md" (click)="openCreateForm()" [disabled]="!isKycComplete">
+        <span class="material-icons-outlined">add_circle</span> Open Account
+      </button>
+    </div>
+  </div>
+
+  <!-- ═════════ Open Account Modal ═════════ -->
+  <div class="modal-backdrop" *ngIf="showOpenForm" (click)="closeCreateForm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h2>Open a New Account</h2>
+          <p>Step {{ currentStep }} of 4 · Subject to admin approval</p>
+        </div>
+        <button class="modal-close" (click)="closeCreateForm()" type="button">
+          <span class="material-icons-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Step indicator -->
+      <div class="oa-steps">
+        <div class="oa-step" [class.active]="currentStep>=1" [class.done]="currentStep>1">
+          <div class="oa-dot">{{ currentStep > 1 ? '✓' : '1' }}</div>
+          <span>Account</span>
+        </div>
+        <div class="oa-line" [class.active]="currentStep>1"></div>
+        <div class="oa-step" [class.active]="currentStep>=2" [class.done]="currentStep>2">
+          <div class="oa-dot">{{ currentStep > 2 ? '✓' : '2' }}</div>
+          <span>Employment</span>
+        </div>
+        <div class="oa-line" [class.active]="currentStep>2"></div>
+        <div class="oa-step" [class.active]="currentStep>=3" [class.done]="currentStep>3">
+          <div class="oa-dot">{{ currentStep > 3 ? '✓' : '3' }}</div>
+          <span>Nominee &amp; Services</span>
+        </div>
+        <div class="oa-line" [class.active]="currentStep>3"></div>
+        <div class="oa-step" [class.active]="currentStep>=4">
+          <div class="oa-dot">4</div>
+          <span>Review</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="alert error" *ngIf="errorMessage">
+          <span class="material-icons-outlined">error_outline</span> {{ errorMessage }}
+        </div>
+
+        <!-- STEP 1 -->
+        <div *ngIf="currentStep === 1">
+          <label class="form-label">Account Type</label>
+          <div class="acc-type-grid">
+            <label class="acc-type-card" [class.selected]="accountForm.accountType==='SAVINGS'">
+              <input type="radio" name="atype" value="SAVINGS" [(ngModel)]="accountForm.accountType" (change)="onTypeChange()" />
+              <span class="material-icons-outlined">savings</span>
+              <strong>Savings Account</strong>
+              <small>For individuals · earn interest · min balance ₹1,000</small>
+            </label>
+            <label class="acc-type-card" [class.selected]="accountForm.accountType==='CURRENT'">
+              <input type="radio" name="atype" value="CURRENT" [(ngModel)]="accountForm.accountType" (change)="onTypeChange()" />
+              <span class="material-icons-outlined">business_center</span>
+              <strong>Current Account</strong>
+              <small>For businesses · unlimited transactions · min ₹5,000</small>
+            </label>
+          </div>
+
+          <div class="form-group mt-md">
+            <label class="form-label">Initial Deposit (₹) <span style="color:#ef4444">*</span></label>
+            <input type="number" class="form-input" [min]="minDeposit" [(ngModel)]="accountForm.initialDeposit" />
+            <span class="form-help">Minimum {{ formatINR(minDeposit) }} for {{ accountForm.accountType }} account</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Purpose of Account</label>
+            <select class="form-select" [(ngModel)]="accountForm.purpose">
+              <option value="">Select purpose</option>
+              <option>Salary</option>
+              <option>Personal Savings</option>
+              <option>Business</option>
+              <option>Investment</option>
+              <option>Education</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- STEP 2: Employment -->
+        <div *ngIf="currentStep === 2">
+          <p class="muted-text">Employment details help us comply with KYC/AML norms and tailor your account features.</p>
+          <div class="form-group mt-md">
+            <label class="form-label">Occupation <span style="color:#ef4444">*</span></label>
+            <input type="text" class="form-input" [(ngModel)]="accountForm.occupation" placeholder="e.g. Software Engineer, Doctor, Teacher" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Employment Status <span style="color:#ef4444">*</span></label>
+            <select class="form-select" [(ngModel)]="accountForm.employmentStatus">
+              <option value="SALARIED">Salaried</option>
+              <option value="SELF_EMPLOYED">Self-employed</option>
+              <option value="STUDENT">Student</option>
+              <option value="RETIRED">Retired</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Branch</label>
+            <select class="form-select" [(ngModel)]="accountForm.branchPreference">
+              <option value="">Auto-assign nearest branch</option>
+              <option>Mumbai &mdash; Andheri</option>
+              <option>Delhi &mdash; Connaught Place</option>
+              <option>Bangalore &mdash; Indiranagar</option>
+              <option>Hyderabad &mdash; Banjara Hills</option>
+              <option>Pune &mdash; Koregaon Park</option>
+              <option>Chennai &mdash; T. Nagar</option>
+              <option>Kolkata &mdash; Park Street</option>
+            </select>
+            <span class="form-help">Your home branch for cheque-book pickup and in-person services.</span>
+          </div>
+        </div>
+
+        <!-- STEP 3: Nominee + Services -->
+        <div *ngIf="currentStep === 3">
+          <h4 style="margin:0 0 8px;font-size:.95rem;color:#111827">Nominee Details</h4>
+          <p class="muted-text">Nominee details ensure smooth transfer of funds in unforeseen circumstances. You can update this later.</p>
+          <div class="form-group mt-md">
+            <label class="form-label">Nominee Full Name <span style="color:#ef4444">*</span></label>
+            <input type="text" class="form-input" [(ngModel)]="accountForm.nomineeName" placeholder="As on Aadhaar / PAN" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Relationship <span style="color:#ef4444">*</span></label>
+            <select class="form-select" [(ngModel)]="accountForm.nomineeRelation">
+              <option value="">Select relationship</option>
+              <option>Spouse</option><option>Father</option><option>Mother</option>
+              <option>Son</option><option>Daughter</option><option>Brother</option>
+              <option>Sister</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nominee Date of Birth</label>
+            <input type="date" class="form-input" [(ngModel)]="accountForm.nomineeDob" />
+          </div>
+
+          <h4 style="margin:24px 0 8px;font-size:.95rem;color:#111827">Services &amp; Communication</h4>
+          <div class="service-grid">
+            <label class="service-card">
+              <input type="checkbox" [(ngModel)]="accountForm.debitCardRequired" />
+              <span class="material-icons-outlined">credit_card</span>
+              <strong>Debit Card</strong>
+              <small>RuPay debit card, free first year</small>
+            </label>
+            <label class="service-card">
+              <input type="checkbox" [(ngModel)]="accountForm.chequeBookRequired" />
+              <span class="material-icons-outlined">receipt_long</span>
+              <strong>Cheque Book</strong>
+              <small>20-leaf cheque book to your branch</small>
+            </label>
+            <label class="service-card">
+              <input type="checkbox" [(ngModel)]="accountForm.netBankingRequired" />
+              <span class="material-icons-outlined">computer</span>
+              <strong>Net Banking</strong>
+              <small>Online banking + mobile app access</small>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Communication Preference</label>
+            <select class="form-select" [(ngModel)]="accountForm.communicationMode">
+              <option value="EMAIL">Email only</option>
+              <option value="SMS">SMS only</option>
+              <option value="BOTH">Email + SMS</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div *ngIf="currentStep === 4">
+          <h3 class="review-title">Review your application</h3>
+          <div class="review-grid">
+            <div><span>Account Holder</span><strong>{{ profile.fullName || '—' }}</strong></div>
+            <div><span>Email</span><strong>{{ profile.email || '—' }}</strong></div>
+            <div><span>Account Type</span><strong>{{ accountForm.accountType }}</strong></div>
+            <div><span>Initial Deposit</span><strong>{{ formatINR(accountForm.initialDeposit) }}</strong></div>
+            <div><span>Purpose</span><strong>{{ accountForm.purpose || '—' }}</strong></div>
+            <div><span>Occupation</span><strong>{{ accountForm.occupation || '—' }}</strong></div>
+            <div><span>Employment</span><strong>{{ accountForm.employmentStatus }}</strong></div>
+            <div><span>Branch</span><strong>{{ accountForm.branchPreference || 'Auto-assign' }}</strong></div>
+            <div><span>Nominee</span><strong>{{ accountForm.nomineeName }} ({{ accountForm.nomineeRelation }})</strong></div>
+            <div><span>Services</span><strong>
+              <span *ngIf="accountForm.debitCardRequired">Debit Card</span>
+              <span *ngIf="accountForm.chequeBookRequired"> · Cheque Book</span>
+              <span *ngIf="accountForm.netBankingRequired"> · Net Banking</span>
+              <span *ngIf="!accountForm.debitCardRequired && !accountForm.chequeBookRequired && !accountForm.netBankingRequired">None</span>
+            </strong></div>
+            <div><span>Communication</span><strong>{{ accountForm.communicationMode }}</strong></div>
+            <div><span>KYC Status</span>
+              <strong><span class="badge badge-success">Verified</span></strong>
+            </div>
+          </div>
+
+          <div class="alert info" style="margin-top:14px;">
+            <span class="material-icons-outlined">info</span>
+            <div>Your application will be reviewed by our admin team. You'll see the account here with "Pending Approval" status until activated.</div>
+          </div>
+
+          <label class="terms-row">
+            <input type="checkbox" [(ngModel)]="accountForm.acceptedTerms" />
+            <span>I confirm the above details are correct and accept NeoBank360's
+              <a href="#">Terms of Service</a> and <a href="#">Account Opening Agreement</a>.</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button *ngIf="currentStep > 1" class="btn btn-ghost" (click)="prevStep()">
+          <span class="material-icons-outlined">arrow_back</span> Back
+        </button>
+        <div style="flex:1"></div>
+        <button *ngIf="currentStep < 4" class="btn btn-primary" (click)="nextStep()">
+          Continue <span class="material-icons-outlined">arrow_forward</span>
+        </button>
+        <button *ngIf="currentStep === 4" class="btn btn-success"
+                (click)="createAccount()" [disabled]="loading || !accountForm.acceptedTerms">
+          <span class="spinner" *ngIf="loading"></span>
+          <span class="material-icons-outlined" *ngIf="!loading">send</span>
+          {{ loading ? 'Submitting...' : 'Submit Application' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

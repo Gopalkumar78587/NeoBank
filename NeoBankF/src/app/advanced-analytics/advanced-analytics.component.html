@@ -1,0 +1,222 @@
+<div class="page">
+
+  <!-- ═════════ HERO HEADER ═════════ -->
+  <header class="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <span class="blob blob-a"></span>
+      <span class="blob blob-b"></span>
+    </div>
+
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="eyebrow">
+          <span class="dot"></span> Sprint 5 &middot; FR-8
+        </div>
+        <h1>
+          <span class="icon-chip"><span class="material-icons-outlined">analytics</span></span>
+          Advanced Analytics
+        </h1>
+        <p>Deep insights into your spending habits, budget health, and long-term wealth growth.</p>
+      </div>
+
+      <nav class="tab-toggle" role="tablist" aria-label="Analytics sections">
+        <button role="tab"
+                [class.active]="activeTab === 'spending'"
+                [attr.aria-selected]="activeTab === 'spending'"
+                (click)="activeTab = 'spending'">
+          <span class="material-icons-outlined">pie_chart</span>
+          <span>Spending &amp; Budgets</span>
+        </button>
+        <button role="tab"
+                [class.active]="activeTab === 'wealth'"
+                [attr.aria-selected]="activeTab === 'wealth'"
+                (click)="activeTab = 'wealth'">
+          <span class="material-icons-outlined">account_balance</span>
+          <span>Wealth &amp; Liabilities</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ═════════ SPENDING TAB ═════════ -->
+  <section *ngIf="activeTab === 'spending'" class="tab-content fade-in" role="tabpanel">
+
+    <div class="row-2" *ngIf="spending; else loadingTpl">
+
+      <article class="card">
+        <header class="card-header">
+          <div>
+            <h3><span class="material-icons-outlined">pie_chart</span> Expense Distribution</h3>
+            <span class="card-sub">Share of spending by category</span>
+          </div>
+          <label class="select-wrap">
+            <span class="material-icons-outlined">calendar_month</span>
+            <select [(ngModel)]="selectedMonth" (ngModelChange)="onMonthChange()" class="month-select">
+              <option *ngFor="let m of availableMonths" [value]="m">{{ m }}</option>
+            </select>
+          </label>
+        </header>
+        <div class="chart-wrap small">
+          <canvas baseChart *ngIf="doughnutData.labels?.length"
+                  [data]="doughnutData" [options]="doughnutOptions" type="doughnut"></canvas>
+          <div *ngIf="!doughnutData.labels?.length" class="empty-state">
+            <span class="material-icons-outlined">savings</span>
+            <p>No spending recorded this month</p>
+            <small>Pick another month to view distribution</small>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <header class="card-header">
+          <div>
+            <h3><span class="material-icons-outlined">stacked_bar_chart</span> Spending Trend</h3>
+            <span class="card-sub">Last 6 months &middot; stacked by category</span>
+          </div>
+          <span class="badge-soft">6M</span>
+        </header>
+        <div class="chart-wrap">
+          <canvas baseChart *ngIf="stackedBarData.labels?.length"
+                  [data]="stackedBarData" [options]="stackedBarOptions" type="bar"></canvas>
+          <div *ngIf="!stackedBarData.labels?.length" class="empty-state">
+            <span class="material-icons-outlined">timeline</span>
+            <p>No trend data yet</p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Budget vs Spent -->
+    <article class="card" *ngIf="spending">
+      <header class="card-header">
+        <div>
+          <h3><span class="material-icons-outlined">compare_arrows</span> Budget vs Actual</h3>
+          <span class="card-sub">How close you are to your category limits</span>
+        </div>
+        <div class="legend-inline">
+          <span><i class="dot-g"></i> On track</span>
+          <span><i class="dot-r"></i> Over budget</span>
+        </div>
+      </header>
+
+      <div class="bvs-grid">
+        <div *ngFor="let c of spending.categorySpending" class="bvs-row"
+             [class.over]="c.budgetLimit > 0 && c.totalSpent > c.budgetLimit">
+          <div class="bvs-meta">
+            <div class="bvs-title">
+              <span class="cat-dot"></span>
+              <strong>{{ c.category }}</strong>
+            </div>
+            <div class="bvs-numbers">
+              <span class="spent">₹{{ c.totalSpent | number:'1.0-0' }}</span>
+              <span class="sep">/</span>
+              <span class="limit">₹{{ c.budgetLimit | number:'1.0-0' }}</span>
+              <span class="pct" *ngIf="c.budgetLimit > 0">
+                {{ (c.totalSpent / c.budgetLimit * 100) | number:'1.0-0' }}%
+              </span>
+            </div>
+          </div>
+          <div class="bvs-bar">
+            <div class="bvs-fill"
+                 [style.width.%]="c.budgetLimit > 0 ? (c.totalSpent / c.budgetLimit * 100 > 100 ? 100 : c.totalSpent / c.budgetLimit * 100) : 0"></div>
+          </div>
+        </div>
+
+        <div *ngIf="spending.categorySpending.length === 0" class="empty-state">
+          <span class="material-icons-outlined">inbox</span>
+          <p>No budgets configured</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ═════════ WEALTH TAB ═════════ -->
+  <section *ngIf="activeTab === 'wealth'" class="tab-content fade-in" role="tabpanel">
+    <div *ngIf="wealth; else loadingTpl">
+
+      <article class="card card-feature">
+        <header class="card-header">
+          <div>
+            <h3><span class="material-icons-outlined">area_chart</span> Net Worth Progression</h3>
+            <span class="card-sub">Total Balance − Outstanding Loan = Net Worth</span>
+          </div>
+          <div class="legend-inline">
+            <span><i class="dot-i"></i> Balance</span>
+            <span><i class="dot-r"></i> Loan</span>
+            <span><i class="dot-g"></i> Net Worth</span>
+          </div>
+        </header>
+        <div class="chart-wrap tall">
+          <canvas baseChart [data]="netWorthData" [options]="netWorthOptions" type="line"></canvas>
+        </div>
+      </article>
+
+      <div class="row-2">
+        <article class="card">
+          <header class="card-header">
+            <div>
+              <h3><span class="material-icons-outlined">card_giftcard</span> Reward Points</h3>
+              <span class="card-sub">Monthly accrual history</span>
+            </div>
+          </header>
+          <div class="chart-wrap small">
+            <canvas baseChart *ngIf="rewardsData.labels?.length"
+                    [data]="rewardsData" [options]="rewardsOptions" type="line"></canvas>
+            <div *ngIf="!rewardsData.labels?.length" class="empty-state">
+              <span class="material-icons-outlined">card_giftcard</span>
+              <p>No rewards yet</p>
+              <small>Earn points on every transaction</small>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <header class="card-header">
+            <div>
+              <h3><span class="material-icons-outlined">event_available</span> Loan Payoff Forecast</h3>
+              <span class="card-sub">Projected closure of active loans</span>
+            </div>
+          </header>
+          <div class="forecast-list">
+            <div *ngFor="let f of wealth.loanPayoffForecast" class="forecast-row">
+              <div class="fcst-product">
+                <span class="fcst-icon"><span class="material-icons-outlined">request_quote</span></span>
+                <div>
+                  <strong>{{ f.productName }}</strong>
+                  <span>Account #{{ f.loanAccountId }}</span>
+                </div>
+              </div>
+              <div class="fcst-stats">
+                <div>
+                  <label>Outstanding</label>
+                  <strong>₹{{ f.outstandingPrincipal | number:'1.0-0' }}</strong>
+                </div>
+                <div>
+                  <label>Months Left</label>
+                  <strong>{{ f.monthsRemaining }}</strong>
+                </div>
+                <div>
+                  <label>Payoff</label>
+                  <strong>{{ f.projectedPayoffDate | date:'MMM yyyy' }}</strong>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="wealth.loanPayoffForecast.length === 0" class="empty-state">
+              <span class="material-icons-outlined">verified</span>
+              <p>No active loans</p>
+              <small>You're debt-free — great work!</small>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <ng-template #loadingTpl>
+    <div class="row-2">
+      <div class="card"><div class="shimmer-block"></div></div>
+      <div class="card"><div class="shimmer-block"></div></div>
+    </div>
+    <div class="card"><div class="shimmer-block short"></div></div>
+  </ng-template>
+</div>

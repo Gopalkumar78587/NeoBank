@@ -1,0 +1,139 @@
+<div class="page">
+  <div class="left-panel">
+    <div class="left-content">
+      <a routerLink="/" class="back-link">
+        <span class="material-icons-outlined">arrow_back</span> Back to Home
+      </a>
+      <div class="brand">
+        <span class="material-icons-outlined brand-icon">account_balance</span>
+        <h1>Neo<span>Bank</span>360</h1>
+      </div>
+      <p class="tagline">Secure, fast & modern<br>digital banking platform</p>
+      <div class="features-list">
+        <div class="feat"><span class="material-icons-outlined">verified_user</span> Bank-grade security</div>
+        <div class="feat"><span class="material-icons-outlined">speed</span> Instant transactions</div>
+        <div class="feat"><span class="material-icons-outlined">insights</span> Real-time analytics</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="card">
+      <div class="card-header">
+        <h2>Welcome Back</h2>
+        <p>Sign in to your account</p>
+      </div>
+
+      <!-- Role Toggle -->
+      <div class="role-toggle">
+        <button [class.active]="selectedRole === 'customer'" (click)="selectRole('customer')">
+          <span class="material-icons-outlined">person</span> Customer
+        </button>
+        <button [class.active]="selectedRole === 'admin'" (click)="selectRole('admin')">
+          <span class="material-icons-outlined">admin_panel_settings</span> Admin
+        </button>
+        <div class="toggle-slider" [class.admin]="selectedRole === 'admin'"></div>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="login()">
+        <div class="field">
+          <label>
+            <span class="material-icons-outlined">mail</span> Email Address
+          </label>
+          <input type="email" formControlName="email" placeholder="name@example.com"
+            [class.invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" />
+          <span class="field-error" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+            Please enter a valid email address
+          </span>
+        </div>
+
+        <div class="field">
+          <label>
+            <span class="material-icons-outlined">lock</span> Password
+          </label>
+          <div class="password-wrap">
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
+              placeholder="Enter your password"
+              [class.invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" />
+            <button type="button" class="eye-btn" (click)="togglePassword()">
+              <span class="material-icons-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          <span class="field-error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+            Password is required
+          </span>
+          <div class="forgot-row">
+            <button type="button" class="forgot-link" (click)="openForgotPassword()">Forgot Password?</button>
+          </div>
+        </div>
+
+        <!-- CAPTCHA — alphanumeric, both letters & digits required -->
+        <div class="field captcha-field">
+          <label><span class="material-icons-outlined">security</span> Security Check</label>
+          <div class="captcha-box">
+            <div class="captcha-display" title="Type the characters as shown (not case-sensitive)">
+              {{ captchaCode }}
+            </div>
+            <input type="text" [(ngModel)]="captchaInput" [ngModelOptions]="{standalone: true}"
+                   placeholder="Type code" class="captcha-input wide"
+                   maxlength="6" autocomplete="off" spellcheck="false" />
+            <button type="button" class="captcha-refresh" (click)="refreshCaptcha()" title="Refresh">
+              <span class="material-icons-outlined">refresh</span>
+            </button>
+          </div>
+          <span class="captcha-hint">Enter the 6 characters above (mix of letters &amp; numbers, not case-sensitive)</span>
+          <span class="field-error" *ngIf="captchaError">Incorrect code. Please try again.</span>
+        </div>
+
+        <button class="login-btn" type="submit" [disabled]="loginForm.invalid || loading || !captchaInput"
+          [class.admin-mode]="selectedRole === 'admin'">
+          <span class="material-icons-outlined" *ngIf="!loading">login</span>
+          <span class="spinner" *ngIf="loading"></span>
+          {{ loading ? 'Signing in...' : (selectedRole === 'admin' ? 'Admin Sign In' : 'Sign In') }}
+        </button>
+      </form>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="material-icons-outlined">error_outline</span>
+        {{ errorMessage }}
+      </div>
+
+      <p class="footer-text">
+        Don't have an account? <a routerLink="/register">Create one</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal-overlay" *ngIf="showForgotPassword" (click)="closeForgotPassword()">
+  <div class="forgot-modal" (click)="$event.stopPropagation()">
+    <div class="forgot-modal-header">
+      <span class="material-icons-outlined">lock_reset</span>
+      <h3>Reset Password</h3>
+      <button class="modal-close" (click)="closeForgotPassword()">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+
+    <div *ngIf="!forgotSent" class="forgot-modal-body">
+      <p class="forgot-desc">Enter the email address linked to your NeoBank360 account. We'll send you a reset link.</p>
+      <div class="field">
+        <label><span class="material-icons-outlined">mail</span> Email Address</label>
+        <input type="email" [(ngModel)]="forgotEmail" placeholder="name@example.com" class="forgot-input" />
+        <span class="field-error" *ngIf="forgotError">{{ forgotError }}</span>
+      </div>
+      <button class="forgot-send-btn" (click)="sendForgotPassword()">
+        <span class="material-icons-outlined">send</span> Send Reset Link
+      </button>
+    </div>
+
+    <div *ngIf="forgotSent" class="forgot-success">
+      <span class="material-icons-outlined success-icon">mark_email_read</span>
+      <h4>Email Sent!</h4>
+      <p>If <strong>{{ forgotEmail }}</strong> is registered, you'll receive a password reset link shortly.</p>
+      <p class="forgot-note">Check your spam folder if you don't see it within a few minutes.</p>
+      <button class="forgot-send-btn" (click)="closeForgotPassword()">Done</button>
+    </div>
+  </div>
+</div>

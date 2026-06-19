@@ -1,0 +1,350 @@
+<div class="tx-page">
+  <!-- Page Header (single bar, sits inside the customer-layout topbar) -->
+  <header class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">
+        {{ activeTab === 'overview' ? 'Transaction Dashboard' :
+           activeTab === 'transactions' ? 'All Transactions' :
+           activeTab === 'transfer' ? 'New Transaction' : 'Transaction Analytics' }}
+      </h1>
+      <div class="live-indicator" [class.live]="isLive" (click)="toggleLive()">
+        <span class="live-dot"></span>
+        {{ isLive ? 'LIVE' : 'PAUSED' }}
+        <span class="last-update">{{ lastUpdated | date:'mediumTime' }}</span>
+      </div>
+    </div>
+    <div class="page-header-right">
+      <div class="account-select" *ngIf="accounts.length > 0">
+        <select [(ngModel)]="accountId" (ngModelChange)="onAccountChange()">
+          <option *ngFor="let acc of accounts" [ngValue]="acc.id">
+            {{ acc.maskedAccountNumber }} ({{ acc.accountType }}) - Rs.{{ acc.balance | number:'1.2-2' }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs strip -->
+  <nav class="tab-strip">
+    <button (click)="switchTab('overview')" [class.active]="activeTab === 'overview'">
+      <span class="material-icons-outlined">dashboard</span>
+      <span>Overview</span>
+    </button>
+    <button (click)="switchTab('transactions')" [class.active]="activeTab === 'transactions'">
+      <span class="material-icons-outlined">receipt_long</span>
+      <span>All Transactions</span>
+    </button>
+    <button (click)="switchTab('transfer')" [class.active]="activeTab === 'transfer'">
+      <span class="material-icons-outlined">send</span>
+      <span>New Transaction</span>
+    </button>
+    <button (click)="switchTab('analytics')" [class.active]="activeTab === 'analytics'">
+      <span class="material-icons-outlined">analytics</span>
+      <span>Analytics</span>
+    </button>
+  </nav>
+
+  <main class="main-content">
+    <!-- Messages -->
+    <div class="content-area">
+      <div class="msg success" *ngIf="successMessage">
+        <span class="material-icons-outlined">check_circle</span> {{ successMessage }}
+      </div>
+      <div class="msg error" *ngIf="errorMessage">
+        <span class="material-icons-outlined">error</span> {{ errorMessage }}
+      </div>
+
+      <!-- ===== OVERVIEW TAB ===== -->
+      <div *ngIf="activeTab === 'overview'" class="tab-content animate-in">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card primary-card">
+            <div class="card-icon"><span class="material-icons-outlined">account_balance_wallet</span></div>
+            <div class="card-info">
+              <span class="card-label">Account Balance</span>
+              <span class="card-value">Rs. {{ getSelectedAccount()?.balance | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon green"><span class="material-icons-outlined">south_west</span></div>
+            <div class="card-info">
+              <span class="card-label">Total Credits</span>
+              <span class="card-value">Rs. {{ totalCredits | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon red"><span class="material-icons-outlined">north_east</span></div>
+            <div class="card-info">
+              <span class="card-label">Total Debits</span>
+              <span class="card-value">Rs. {{ totalDebits | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="summary-card" [class.positive-card]="netFlow >= 0" [class.negative-card]="netFlow < 0">
+            <div class="card-icon" [class.green]="netFlow >= 0" [class.red]="netFlow < 0">
+              <span class="material-icons-outlined">{{ netFlow >= 0 ? 'trending_up' : 'trending_down' }}</span>
+            </div>
+            <div class="card-info">
+              <span class="card-label">Net Flow</span>
+              <span class="card-value">Rs. {{ netFlow | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">history</span> Recent Transactions</h3>
+            <button class="toggle-btn" (click)="switchTab('transactions')">View All</button>
+          </div>
+          <div class="table-wrap" *ngIf="filtered.length > 0">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let tx of filtered | slice:0:8" [class.credit-row]="tx.type === 'CREDIT'" [class.debit-row]="tx.type === 'DEBIT'">
+                  <td>
+                    <div class="date-cell"><span class="date-main">{{ tx.createdAt | date:'mediumDate' }}</span><span class="date-time">{{ tx.createdAt | date:'shortTime' }}</span></div>
+                  </td>
+                  <td><span class="type-badge" [class.credit-badge]="tx.type === 'CREDIT'" [class.debit-badge]="tx.type === 'DEBIT'"><span class="material-icons-outlined">{{ getStatusIcon(tx.type) }}</span> {{ tx.type }}</span></td>
+                  <td [class.text-green]="tx.type === 'CREDIT'" [class.text-red]="tx.type === 'DEBIT'" class="amount-col">{{ tx.type === 'CREDIT' ? '+' : '-' }}Rs. {{ tx.amount | number:'1.2-2' }}</td>
+                  <td class="balance-col">Rs. {{ tx.balanceAfter | number:'1.2-2' }}</td>
+                  <td class="desc-col">{{ tx.description || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="empty-inline" *ngIf="filtered.length === 0">
+            <span class="material-icons-outlined" style="font-size:48px;color:#d1d5db">receipt_long</span>
+            <p>No transactions yet.</p>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <div class="action-card" (click)="switchTab('transfer')">
+            <span class="material-icons-outlined">add_circle</span>
+            <span>New Transaction</span>
+          </div>
+          <div class="action-card" (click)="switchTab('analytics')">
+            <span class="material-icons-outlined">bar_chart</span>
+            <span>Analytics</span>
+          </div>
+          <div class="action-card" routerLink="/bills">
+            <span class="material-icons-outlined">receipt</span>
+            <span>Bill Manager</span>
+          </div>
+          <div class="action-card" routerLink="/customer/dashboard">
+            <span class="material-icons-outlined">dashboard</span>
+            <span>Dashboard</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ALL TRANSACTIONS TAB ===== -->
+      <div *ngIf="activeTab === 'transactions'" class="tab-content animate-in">
+        <!-- Filters -->
+        <div class="filters-bar">
+          <div class="filter-group">
+            <span class="material-icons-outlined">search</span>
+            <input type="text" placeholder="Search description..." [(ngModel)]="searchQuery" (input)="applyFilter()">
+          </div>
+          <div class="filter-group">
+            <select [(ngModel)]="filter" (change)="applyFilter()">
+              <option value="ALL">All Types</option>
+              <option value="CREDIT">Credit</option>
+              <option value="DEBIT">Debit</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <input type="date" [(ngModel)]="dateFrom" (change)="applyFilter()" placeholder="From">
+          </div>
+          <div class="filter-group">
+            <input type="date" [(ngModel)]="dateTo" (change)="applyFilter()" placeholder="To">
+          </div>
+          <div class="filter-group">
+            <input type="number" [(ngModel)]="minAmount" (input)="applyFilter()" placeholder="Min Rs.">
+          </div>
+          <div class="filter-group">
+            <input type="number" [(ngModel)]="maxAmount" (input)="applyFilter()" placeholder="Max Rs.">
+          </div>
+          <button class="clear-filter-btn" (click)="clearFilters()">
+            <span class="material-icons-outlined">filter_list_off</span> Clear
+          </button>
+        </div>
+
+        <div class="results-count">{{ filtered.length }} transactions</div>
+
+        <!-- Table -->
+        <div class="panel" *ngIf="filtered.length > 0">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Status</th><th>Date & Time</th><th>Type</th><th>Amount</th><th>Balance After</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let tx of filtered; let i = index" [class.credit-row]="tx.type === 'CREDIT'" [class.debit-row]="tx.type === 'DEBIT'" class="animate-row" [style.animation-delay]="i * 30 + 'ms'">
+                  <td><div class="status-indicator success"><span class="material-icons-outlined">check_circle</span></div></td>
+                  <td><div class="date-cell"><span class="date-main">{{ tx.createdAt | date:'mediumDate' }}</span><span class="date-time">{{ tx.createdAt | date:'shortTime' }}</span></div></td>
+                  <td><span class="type-badge" [class.credit-badge]="tx.type === 'CREDIT'" [class.debit-badge]="tx.type === 'DEBIT'"><span class="material-icons-outlined">{{ getStatusIcon(tx.type) }}</span> {{ tx.type }}</span></td>
+                  <td [class.text-green]="tx.type === 'CREDIT'" [class.text-red]="tx.type === 'DEBIT'" class="amount-col">{{ tx.type === 'CREDIT' ? '+' : '-' }}Rs. {{ tx.amount | number:'1.2-2' }}</td>
+                  <td class="balance-col">Rs. {{ tx.balanceAfter | number:'1.2-2' }}</td>
+                  <td class="desc-col">{{ tx.description || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="filtered.length === 0">
+          <span class="material-icons-outlined" style="font-size:56px;color:#d1d5db">receipt_long</span>
+          <h4>No transactions found</h4>
+          <p>Try adjusting your filters or make a new transaction.</p>
+        </div>
+      </div>
+
+      <!-- ===== NEW TRANSACTION / TRANSFER TAB ===== -->
+      <div *ngIf="activeTab === 'transfer'" class="tab-content animate-in">
+        <div class="form-panels">
+          <!-- Deposit / Withdraw -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3><span class="material-icons-outlined">swap_vert</span> Deposit / Withdraw</h3>
+            </div>
+            <form class="form-grid">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Account</label>
+                  <select [(ngModel)]="accountId" name="txAcc" (ngModelChange)="onAccountChange()">
+                    <option *ngFor="let acc of accounts" [ngValue]="acc.id">{{ acc.maskedAccountNumber }} - Rs.{{ acc.balance | number:'1.2-2' }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Type</label>
+                  <div class="type-toggle">
+                    <button type="button" [class.active]="txType === 'CREDIT'" (click)="txType = 'CREDIT'">
+                      <span class="material-icons-outlined">south_west</span> Deposit
+                    </button>
+                    <button type="button" [class.active]="txType === 'DEBIT'" (click)="txType = 'DEBIT'">
+                      <span class="material-icons-outlined">north_east</span> Withdraw
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Amount (Rs.)</label>
+                  <input type="number" min="1" [(ngModel)]="txAmount" name="txAmt" placeholder="Enter amount">
+                </div>
+                <div class="form-group">
+                  <label>Description</label>
+                  <input type="text" [(ngModel)]="txDescription" name="txDesc" placeholder="Optional note">
+                </div>
+              </div>
+              <button class="primary-btn" type="button" (click)="performTransaction()" [disabled]="txLoading">
+                <span class="material-icons-outlined">{{ txLoading ? 'hourglass_empty' : 'send' }}</span>
+                {{ txLoading ? 'Processing...' : 'Submit Transaction' }}
+              </button>
+            </form>
+          </div>
+
+          <!-- Fund Transfer -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3><span class="material-icons-outlined">send</span> Fund Transfer</h3>
+            </div>
+            <form class="form-grid">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>From Account</label>
+                  <select [(ngModel)]="transferFrom" name="tfFrom">
+                    <option *ngFor="let acc of accounts" [ngValue]="acc.id">{{ acc.maskedAccountNumber }} - Rs.{{ acc.balance | number:'1.2-2' }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>To Account Number</label>
+                  <input type="text" [(ngModel)]="transferTo" name="tfTo" placeholder="e.g. NB20260012345" autocomplete="off">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Amount (Rs.)</label>
+                  <input type="number" min="1" [(ngModel)]="transferAmount" name="tfAmt" placeholder="Enter amount">
+                </div>
+                <div class="form-group">
+                  <label>Note</label>
+                  <input type="text" [(ngModel)]="transferNote" name="tfNote" placeholder="Optional note">
+                </div>
+              </div>
+              <button class="primary-btn transfer-btn" type="button" (click)="performTransfer()" [disabled]="transferLoading">
+                <span class="material-icons-outlined">{{ transferLoading ? 'hourglass_empty' : 'send' }}</span>
+                {{ transferLoading ? 'Transferring...' : 'Transfer Funds' }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ANALYTICS TAB ===== -->
+      <div *ngIf="activeTab === 'analytics'" class="tab-content animate-in">
+        <!-- Stats -->
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-icon green"><span class="material-icons-outlined">south_west</span></div>
+            <div class="card-info"><span class="card-label">Total Credits</span><span class="card-value">Rs. {{ totalCredits | number:'1.2-2' }}</span></div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon red"><span class="material-icons-outlined">north_east</span></div>
+            <div class="card-info"><span class="card-label">Total Debits</span><span class="card-value">Rs. {{ totalDebits | number:'1.2-2' }}</span></div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon blue"><span class="material-icons-outlined">tag</span></div>
+            <div class="card-info"><span class="card-label">Transactions</span><span class="card-value">{{ txCount }}</span></div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon"><span class="material-icons-outlined">calculate</span></div>
+            <div class="card-info"><span class="card-label">Avg Transaction</span><span class="card-value">Rs. {{ avgTransaction | number:'1.2-2' }}</span></div>
+          </div>
+        </div>
+
+        <div class="detail-cards">
+          <div class="detail-card">
+            <span class="material-icons-outlined" style="color:#43a047">arrow_upward</span>
+            <div><span class="d-label">Largest Credit</span><span class="d-value">Rs. {{ largestCredit | number:'1.2-2' }}</span></div>
+          </div>
+          <div class="detail-card">
+            <span class="material-icons-outlined" style="color:#e53935">arrow_downward</span>
+            <div><span class="d-label">Largest Debit</span><span class="d-value">Rs. {{ largestDebit | number:'1.2-2' }}</span></div>
+          </div>
+          <div class="detail-card">
+            <span class="material-icons-outlined" style="color:#43a047">south_west</span>
+            <div><span class="d-label">Credit Count</span><span class="d-value">{{ creditCount }}</span></div>
+          </div>
+          <div class="detail-card">
+            <span class="material-icons-outlined" style="color:#e53935">north_east</span>
+            <div><span class="d-label">Debit Count</span><span class="d-value">{{ debitCount }}</span></div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="panel chart-panel">
+            <div class="panel-header"><h3><span class="material-icons-outlined">donut_large</span> Credit vs Debit</h3></div>
+            <div class="chart-wrap"><canvas id="txTypeChart" height="250"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <div class="panel-header"><h3><span class="material-icons-outlined">show_chart</span> Balance Flow</h3></div>
+            <div class="chart-wrap"><canvas id="txTrendChart" height="250"></canvas></div>
+          </div>
+        </div>
+        <div class="panel chart-panel">
+          <div class="panel-header"><h3><span class="material-icons-outlined">bar_chart</span> Daily Credits & Debits</h3></div>
+          <div class="chart-wrap"><canvas id="txDailyChart" height="120"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" *ngIf="accounts.length === 0">
+        <span class="material-icons-outlined" style="font-size:56px;color:#d1d5db">account_balance_wallet</span>
+        <h4>No accounts found</h4>
+        <p>Open an account first to view transactions.</p>
+      </div>
+    </div>
+  </main>
+</div>

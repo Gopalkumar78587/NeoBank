@@ -1,0 +1,289 @@
+<div class="admin-loan-dash">
+
+  <!-- ─── Header ─────────────────────────────────────────────── -->
+  <div class="dash-header">
+    <div>
+      <h2>Loan Management Dashboard</h2>
+      <p class="sub-text">Review applications, manage loan products, and track disbursements</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/admin/loan-products" class="btn-secondary-link">Manage Products</a>
+      <a routerLink="/admin/loan-decisions" class="btn-primary-link">All Applications</a>
+    </div>
+  </div>
+
+  <!-- ─── Alerts ──────────────────────────────────────────────── -->
+  <div class="alert-banner success-alert" *ngIf="success">
+    <span class="material-icons-outlined">check_circle</span> {{ success }}
+  </div>
+  <div class="alert-banner error-alert" *ngIf="error">
+    <span class="material-icons-outlined">error_outline</span> {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <span class="material-icons-outlined spinning">sync</span> Loading loan data...
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- ─── Stats Cards ──────────────────────────────────────── -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon"><span class="material-icons-outlined">description</span></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ stats.total }}</div>
+          <div class="stat-label">Total Applications</div>
+        </div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon"><span class="material-icons-outlined">pending_actions</span></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ stats.pending }}</div>
+          <div class="stat-label">Pending Review</div>
+          <div class="action-hint" *ngIf="stats.pending > 0">Action required!</div>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon"><span class="material-icons-outlined">check_circle</span></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ stats.approved }}</div>
+          <div class="stat-label">Approved</div>
+        </div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon"><span class="material-icons-outlined">cancel</span></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ stats.rejected }}</div>
+          <div class="stat-label">Rejected</div>
+        </div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-icon"><span class="material-icons-outlined">currency_rupee</span></div>
+        <div class="stat-body">
+          <div class="stat-value">₹{{ stats.totalDisbursed | number:'1.0-0' }}</div>
+          <div class="stat-label">Total Disbursed</div>
+        </div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon"><span class="material-icons-outlined">inventory_2</span></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ products.length }}</div>
+          <div class="stat-label">Loan Products</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Two column ───────────────────────────────────────── -->
+    <div class="two-col">
+
+      <!-- Left: Pending Applications -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-outlined">gavel</span>
+          <h3>Pending Applications</h3>
+          <span class="badge-urgent" *ngIf="pendingApps.length > 0">{{ pendingApps.length }}</span>
+        </div>
+
+        <div class="no-data" *ngIf="pendingApps.length === 0">
+          <span class="material-icons-outlined">check_circle_outline</span> No pending applications!
+        </div>
+
+        <div class="pending-list">
+          <div class="pending-card" *ngFor="let app of pendingApps; trackBy: trackById">
+            <div class="pc-top">
+              <div class="pc-name">{{ app.applicantName }}</div>
+              <div class="pc-email">{{ app.applicantEmail }}</div>
+            </div>
+            <div class="pc-details">
+              <div class="pc-item"><span class="pc-label">Product</span><span class="pc-val">{{ app.productName }}</span></div>
+              <div class="pc-item"><span class="pc-label">Amount</span><span class="pc-val amt">₹{{ app.requestedAmount | number:'1.0-0' }}</span></div>
+              <div class="pc-item"><span class="pc-label">Tenure</span><span class="pc-val">{{ app.requestedTenureMonths }} months</span></div>
+              <div class="pc-item"><span class="pc-label">Applied</span><span class="pc-val">{{ app.appliedAt | date:'dd MMM yy' }}</span></div>
+            </div>
+            <div class="pc-actions">
+              <button class="btn-approve" (click)="decision.decision='APPROVED'; openDecision(app)">
+                <span class="material-icons-outlined">check</span> Approve
+              </button>
+              <button class="btn-reject" (click)="decision.decision='REJECTED'; openDecision(app)">
+                <span class="material-icons-outlined">close</span> Reject
+              </button>
+              <button class="btn-decide" (click)="openDecision(app)">
+                <span class="material-icons-outlined">rate_review</span> Review
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Loan Products + Recent Activity -->
+      <div class="right-col">
+
+        <!-- Loan Products -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="material-icons-outlined">inventory_2</span>
+            <h3>Loan Products</h3>
+            <a routerLink="/admin/loan-products" class="link-more">Manage →</a>
+          </div>
+          <div class="no-data" *ngIf="products.length === 0">
+            <span class="material-icons-outlined">info_outline</span> No products configured. <a routerLink="/admin/loan-products">Add one.</a>
+          </div>
+          <div class="product-mini-list">
+            <div class="product-mini" *ngFor="let p of products">
+              <div class="pm-left">
+                <div class="pm-name">{{ p.productName }}</div>
+                <div class="pm-meta">{{ p.annualInterestRate }}% p.a. &nbsp;·&nbsp; ₹{{ p.minAmount | number:'1.0-0' }}–₹{{ p.maxAmount | number:'1.0-0' }}</div>
+              </div>
+              <div class="pm-tenures">{{ p.allowedTenures.join(', ') }} mo</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Decisions -->
+        <div class="panel mt-panel">
+          <div class="panel-header">
+            <span class="material-icons-outlined">history</span>
+            <h3>Recent Decisions</h3>
+            <a routerLink="/admin/loan-decisions" class="link-more">All →</a>
+          </div>
+          <div class="no-data" *ngIf="stats.approved + stats.rejected === 0">
+            <span class="material-icons-outlined">hourglass_empty</span> No decisions yet.
+          </div>
+          <div class="decision-list">
+            <div class="decision-row" *ngFor="let app of applications | slice:0:6">
+              <div *ngIf="app.status !== 'PENDING'">
+                <div class="dr-top">
+                  <span class="dr-name">{{ app.applicantName }}</span>
+                  <span [class]="statusClass(app.status)" class="mini-badge">{{ app.status }}</span>
+                </div>
+                <div class="dr-meta">{{ app.productName }} · ₹{{ app.requestedAmount | number:'1.0-0' }} · {{ app.decidedAt | date:'dd MMM yy' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── All Applications Table ────────────────────────────── -->
+    <div class="panel mt">
+      <div class="panel-header">
+        <span class="material-icons-outlined">table_view</span>
+        <h3>All Applications</h3>
+        <div class="filter-bar">
+          <select [(ngModel)]="filterStatus" class="filter-select">
+            <option value="ALL">All</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+        <a routerLink="/admin/loan-decisions" class="link-more">Full View →</a>
+      </div>
+      <div class="no-data" *ngIf="filtered.length === 0">No applications match filter.</div>
+      <div class="table-scroll" *ngIf="filtered.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Applicant</th><th>Product</th><th>Amount</th><th>Tenure</th><th>Status</th><th>Applied</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let app of filtered | slice:0:10; trackBy: trackById">
+              <td>{{ app.id }}</td>
+              <td>
+                <div class="applicant-name">{{ app.applicantName }}</div>
+                <div class="applicant-email">{{ app.applicantEmail }}</div>
+              </td>
+              <td>{{ app.productName }}</td>
+              <td class="amt-cell">₹{{ app.requestedAmount | number:'1.0-0' }}</td>
+              <td>{{ app.requestedTenureMonths }} mo</td>
+              <td><span [class]="statusClass(app.status)" class="mini-badge">{{ app.status }}</span></td>
+              <td>{{ app.appliedAt | date:'dd MMM yy' }}</td>
+              <td>
+                <button *ngIf="app.status === 'PENDING'" class="btn-decide-sm" (click)="openDecision(app)">Decide</button>
+                <span *ngIf="app.status !== 'PENDING'" class="decided-label">{{ app.adminRemarks || '—' }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+</div>
+
+<!-- ─── Decision Modal ──────────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="selectedApp" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Loan Decision — Application #{{ selectedApp.id }}</h3>
+      <button class="modal-close" (click)="closeModal()">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="applicant-info">
+      <div class="info-row">
+        <span class="material-icons-outlined">person</span>
+        <div>
+          <div class="info-name">{{ selectedApp.applicantName }}</div>
+          <div class="info-email">{{ selectedApp.applicantEmail }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loan-summary">
+      <div class="ls-item">
+        <div class="ls-label">Product</div>
+        <div class="ls-val">{{ selectedApp.productName }}</div>
+      </div>
+      <div class="ls-item">
+        <div class="ls-label">Requested Amount</div>
+        <div class="ls-val highlight">₹{{ selectedApp.requestedAmount | number:'1.0-0' }}</div>
+      </div>
+      <div class="ls-item">
+        <div class="ls-label">Tenure</div>
+        <div class="ls-val">{{ selectedApp.requestedTenureMonths }} months</div>
+      </div>
+      <div class="ls-item">
+        <div class="ls-label">Applied On</div>
+        <div class="ls-val">{{ selectedApp.appliedAt | date:'dd MMM yyyy' }}</div>
+      </div>
+    </div>
+
+    <div class="decision-section">
+      <label class="decision-label">Your Decision *</label>
+      <div class="decision-toggle">
+        <button [class.approve-selected]="decision.decision === 'APPROVED'"
+                (click)="decision.decision = 'APPROVED'">
+          <span class="material-icons-outlined">check_circle</span> Approve
+        </button>
+        <button [class.reject-selected]="decision.decision === 'REJECTED'"
+                (click)="decision.decision = 'REJECTED'">
+          <span class="material-icons-outlined">cancel</span> Reject
+        </button>
+      </div>
+    </div>
+
+    <div class="remarks-section">
+      <label>Remarks <span class="optional">(optional)</span></label>
+      <textarea class="remarks-input" rows="3" [(ngModel)]="decision.adminRemarks"
+                placeholder="Add remarks for the applicant..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-submit-approve" *ngIf="decision.decision === 'APPROVED'"
+              (click)="submitDecision()" [disabled]="deciding">
+        <span class="material-icons-outlined">check_circle</span>
+        {{ deciding ? 'Processing...' : 'Confirm Approval' }}
+      </button>
+      <button class="btn-submit-reject" *ngIf="decision.decision === 'REJECTED'"
+              (click)="submitDecision()" [disabled]="deciding">
+        <span class="material-icons-outlined">cancel</span>
+        {{ deciding ? 'Processing...' : 'Confirm Rejection' }}
+      </button>
+      <button class="btn-cancel" (click)="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>

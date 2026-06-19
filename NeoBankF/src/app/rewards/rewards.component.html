@@ -1,0 +1,282 @@
+<div class="rw-page">
+  <header class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">
+        <span class="material-icons-outlined" style="color:#ffd700;margin-right:8px">emoji_events</span>
+        {{ activeTab === 'overview' ? 'Rewards Center' :
+           activeTab === 'history' ? 'Reward History' :
+           activeTab === 'redeem' ? 'Redeem Points' : 'Tier Benefits' }}
+      </h1>
+      <span class="page-date live-dot">● Live</span>
+    </div>
+  </header>
+
+  <nav class="tab-strip">
+    <button [class.active]="activeTab === 'overview'" (click)="switchTab('overview')">
+      <span class="material-icons-outlined">emoji_events</span><span>Overview</span>
+    </button>
+    <button [class.active]="activeTab === 'history'" (click)="switchTab('history')">
+      <span class="material-icons-outlined">history</span><span>History</span>
+    </button>
+    <button [class.active]="activeTab === 'redeem'" (click)="switchTab('redeem')">
+      <span class="material-icons-outlined">redeem</span><span>Redeem</span>
+    </button>
+    <button [class.active]="activeTab === 'tiers'" (click)="switchTab('tiers')">
+      <span class="material-icons-outlined">military_tech</span><span>Tiers</span>
+    </button>
+  </nav>
+
+  <main class="main-content">
+    <div class="content-area" *ngIf="summary">
+      <!-- Messages -->
+      <div class="msg success" *ngIf="successMessage">
+        <span class="material-icons-outlined">check_circle</span> {{ successMessage }}
+      </div>
+      <div class="msg error" *ngIf="errorMessage">
+        <span class="material-icons-outlined">error</span> {{ errorMessage }}
+      </div>
+
+      <!-- ═══════ OVERVIEW ═══════ -->
+      <div *ngIf="activeTab === 'overview'" class="tab-content animate-in">
+        <!-- Tier Banner -->
+        <div class="tier-banner" [style.background]="'linear-gradient(135deg, ' + summary.tier.color + ', ' + summary.tier.color + 'cc)'">
+          <div class="tier-info">
+            <span class="material-icons-outlined tier-icon">{{ summary.tier.icon }}</span>
+            <div>
+              <h2 class="tier-name">{{ summary.tier.name }} Member</h2>
+              <p class="tier-multiplier">{{ summary.tier.multiplier }}x Points Multiplier</p>
+            </div>
+          </div>
+          <div class="tier-points">
+            <span class="points-value">{{ summary.availablePoints | number:'1.0-0' }}</span>
+            <span class="points-label">Available Points</span>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-icon" style="background:#fff3e0;color:#e65100">
+              <span class="material-icons-outlined">stars</span>
+            </div>
+            <div class="card-info">
+              <span class="card-label">Total Points</span>
+              <span class="card-value">{{ summary.totalPoints | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon green"><span class="material-icons-outlined">trending_up</span></div>
+            <div class="card-info">
+              <span class="card-label">This Month</span>
+              <span class="card-value">+{{ summary.thisMonthEarned | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon" style="background:#e3f2fd;color:#1565c0">
+              <span class="material-icons-outlined">redeem</span>
+            </div>
+            <div class="card-info">
+              <span class="card-label">Redeemed</span>
+              <span class="card-value">{{ summary.redeemedPoints | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon" style="background:#fce4ec;color:#c62828">
+              <span class="material-icons-outlined">local_fire_department</span>
+            </div>
+            <div class="card-info">
+              <span class="card-label">Streak</span>
+              <span class="card-value">{{ summary.streak }} days</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Tier Progress -->
+        <div class="panel" *ngIf="nextTier">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">trending_up</span> Progress to {{ nextTier.name }}</h3>
+            <span class="live-badge">● Real-time</span>
+          </div>
+          <div class="tier-progress">
+            <div class="tier-progress-labels">
+              <span [style.color]="summary.tier.color">{{ summary.tier.name }}</span>
+              <span [style.color]="nextTier.color">{{ nextTier.name }}</span>
+            </div>
+            <div class="tier-bar">
+              <div class="tier-fill" [style.width.%]="progressToNext" [style.background]="'linear-gradient(90deg, ' + summary.tier.color + ', ' + nextTier.color + ')'"></div>
+            </div>
+            <div class="tier-progress-info">
+              <span>{{ summary.totalPoints | number:'1.0-0' }} pts</span>
+              <span>{{ nextTier.minPoints | number:'1.0-0' }} pts needed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3><span class="material-icons-outlined">show_chart</span> Earnings Trend</h3>
+            </div>
+            <div class="chart-wrap"><canvas id="earningsLine" height="250"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h3><span class="material-icons-outlined">pie_chart</span> Points by Category</h3>
+            </div>
+            <div class="chart-wrap"><canvas id="categoryPie" height="250"></canvas></div>
+          </div>
+        </div>
+
+        <!-- How Rewards Work -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">help_outline</span> How Rewards Work</h3>
+          </div>
+          <div class="how-it-works">
+            <div class="how-step">
+              <div class="step-icon"><span class="material-icons-outlined">swap_horiz</span></div>
+              <h4>Make Transactions</h4>
+              <p>Earn 1 point per Rs.100 on debits, 0.5 per Rs.100 on credits</p>
+            </div>
+            <div class="how-step">
+              <div class="step-icon"><span class="material-icons-outlined">trending_up</span></div>
+              <h4>Tier Multiplier</h4>
+              <p>Higher tiers get up to 5x points on every transaction</p>
+            </div>
+            <div class="how-step">
+              <div class="step-icon"><span class="material-icons-outlined">redeem</span></div>
+              <h4>Redeem Rewards</h4>
+              <p>Use points for cashback, vouchers, and premium perks</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ HISTORY ═══════ -->
+      <div *ngIf="activeTab === 'history'" class="tab-content animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">history</span> Reward History</h3>
+          </div>
+          <div class="table-wrap" *ngIf="summary.history.length > 0">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Transaction</th>
+                  <th>Points</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let h of summary.history">
+                  <td>{{ h.timestamp | date:'short' }}</td>
+                  <td>{{ h.description }}</td>
+                  <td *ngIf="h.type === 'EARNED'">Rs.{{ h.amount | number:'1.2-2' }}</td>
+                  <td *ngIf="h.type !== 'EARNED'">—</td>
+                  <td>
+                    <span class="points-badge" [class.earned]="h.type === 'EARNED'" [class.redeemed]="h.type === 'REDEEMED'">
+                      {{ h.type === 'EARNED' ? '+' : '' }}{{ h.pointsEarned }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="type-badge" [class.earned-type]="h.type === 'EARNED'" [class.redeemed-type]="h.type === 'REDEEMED'">
+                      {{ h.type }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="empty-state" *ngIf="summary.history.length === 0">
+            <span class="material-icons-outlined empty-icon">history</span>
+            <h4>No reward history yet</h4>
+            <p>Make transactions to start earning rewards!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ REDEEM ═══════ -->
+      <div *ngIf="activeTab === 'redeem'" class="tab-content animate-in">
+        <div class="points-header">
+          <span class="material-icons-outlined" style="font-size:32px;color:#ffd700">stars</span>
+          <div>
+            <span class="available-pts">{{ summary.availablePoints | number:'1.0-0' }}</span>
+            <span class="available-label">Points Available</span>
+          </div>
+        </div>
+
+        <h3 class="section-label">Redeem Rewards</h3>
+        <div class="redeem-grid">
+          <div class="redeem-card" *ngFor="let opt of redeemOptions"
+            [class.disabled]="summary.availablePoints < opt.points">
+            <div class="redeem-icon"><span class="material-icons-outlined">{{ opt.icon }}</span></div>
+            <h4>{{ opt.name }}</h4>
+            <p class="redeem-desc">{{ opt.desc }}</p>
+            <div class="redeem-cost">
+              <span class="material-icons-outlined" style="font-size:16px">stars</span>
+              {{ opt.points | number:'1.0-0' }} points
+            </div>
+            <button class="redeem-btn" (click)="redeemReward(opt)" [disabled]="summary.availablePoints < opt.points">
+              {{ summary.availablePoints >= opt.points ? 'Redeem' : 'Need more pts' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Redemption -->
+        <div class="panel" style="margin-top:20px">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">tune</span> Custom Redemption</h3>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Points to Redeem</label>
+              <input type="number" [(ngModel)]="redeemPoints" min="1" [max]="summary.availablePoints" placeholder="Enter points" />
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" [(ngModel)]="redeemDescription" placeholder="What are you redeeming for?" />
+            </div>
+          </div>
+          <button class="primary-btn" (click)="redeemCustom()" style="margin-top:12px">
+            <span class="material-icons-outlined">redeem</span> Redeem Points
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════ TIERS ═══════ -->
+      <div *ngIf="activeTab === 'tiers'" class="tab-content animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">military_tech</span> Membership Tiers</h3>
+          </div>
+          <div class="tiers-list">
+            <div class="tier-card" *ngFor="let t of allTiers"
+              [class.current-tier]="summary.tier.name === t.name"
+              [style.borderColor]="summary.tier.name === t.name ? t.color : '#e5e7eb'">
+              <div class="tier-card-header" [style.background]="'linear-gradient(135deg, ' + t.color + ', ' + t.color + 'aa)'">
+                <span class="material-icons-outlined" style="font-size:32px;color:white">{{ t.icon }}</span>
+                <div>
+                  <h4 style="color:white;margin:0">{{ t.name }}</h4>
+                  <span style="color:rgba(255,255,255,0.8);font-size:12px">{{ t.multiplier }}x Points</span>
+                </div>
+                <span class="current-badge" *ngIf="summary.tier.name === t.name">Current</span>
+              </div>
+              <div class="tier-card-body">
+                <p class="tier-range">{{ t.minPoints | number:'1.0-0' }} — {{ t.maxPoints >= 9999999 ? '∞' : (t.maxPoints | number:'1.0-0') }} points</p>
+                <ul class="perks-list">
+                  <li *ngFor="let perk of t.perks">
+                    <span class="material-icons-outlined" style="font-size:16px;color:#22c55e">check_circle</span>
+                    {{ perk }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

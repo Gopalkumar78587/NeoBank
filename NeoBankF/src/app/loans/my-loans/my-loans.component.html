@@ -1,0 +1,118 @@
+<div class="my-loans-wrap">
+
+  <!-- Header -->
+  <div class="ml-header">
+    <div class="ml-header-left">
+      <h1>My Loans</h1>
+      <p>Track your active loans, EMIs and application history</p>
+    </div>
+    <a routerLink="/loans/apply" class="btn-apply-new">
+      <span class="material-icons-outlined">add_circle_outline</span> Apply for Loan
+    </a>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button [class.tab-active]="activeTab === 'accounts'" (click)="activeTab = 'accounts'">
+      <span class="material-icons-outlined">account_balance_wallet</span>
+      Active Loans
+      <span class="tab-count" *ngIf="accounts.length > 0">{{ accounts.length }}</span>
+    </button>
+    <button [class.tab-active]="activeTab === 'applications'" (click)="activeTab = 'applications'">
+      <span class="material-icons-outlined">description</span>
+      Applications
+      <span class="tab-count" *ngIf="applications.length > 0">{{ applications.length }}</span>
+    </button>
+  </div>
+
+  <div class="alert-error" *ngIf="error">
+    <span class="material-icons-outlined">error_outline</span> {{ error }}
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <span class="material-icons-outlined spinning">sync</span> Loading your loans...
+  </div>
+
+  <!-- ── ACTIVE LOANS TAB ──────────────────────────────────── -->
+  <div *ngIf="activeTab === 'accounts' && !loading">
+    <div class="empty-card" *ngIf="accounts.length === 0">
+      <div class="empty-icon"><span class="material-icons-outlined">account_balance</span></div>
+      <h3>No Active Loans</h3>
+      <p>You don't have any active loan accounts yet.</p>
+      <a routerLink="/loans/apply" class="btn-apply-new">Apply for Your First Loan</a>
+    </div>
+
+    <div class="loan-grid" *ngIf="accounts.length > 0">
+      <div class="loan-card" *ngFor="let acc of accounts; let i = index">
+        <div class="lc-header" [class]="'lc-color-' + (i % 4)">
+          <div class="lc-product">
+            <span class="material-icons-outlined lc-product-icon">{{ ['home','directions_car','school','business_center'][i % 4] }}</span>
+            {{ acc.productName }}
+          </div>
+          <div class="lc-id">Loan #{{ acc.id }}</div>
+        </div>
+        <div class="lc-emi-hero">
+          <div class="lc-emi-label">Monthly EMI</div>
+          <div class="lc-emi-amount">₹{{ acc.emiAmount | number:'1.2-2' }}</div>
+        </div>
+        <div class="lc-stats">
+          <div class="lcs">
+            <span class="lcs-label">Principal</span>
+            <span class="lcs-val">₹{{ acc.principalAmount | number:'1.0-0' }}</span>
+          </div>
+          <div class="lcs">
+            <span class="lcs-label">Interest</span>
+            <span class="lcs-val">{{ acc.annualInterestRate }}% p.a.</span>
+          </div>
+          <div class="lcs">
+            <span class="lcs-label">Tenure</span>
+            <span class="lcs-val">{{ acc.tenureMonths }} months</span>
+          </div>
+          <div class="lcs">
+            <span class="lcs-label">Disbursed</span>
+            <span class="lcs-val">{{ acc.disbursedAt | date:'dd MMM yy' }}</span>
+          </div>
+        </div>
+        <div class="lc-footer">
+          <a [routerLink]="['/loans/repayments', acc.id]" class="btn-schedule">
+            <span class="material-icons-outlined">calendar_view_month</span>
+            View EMI Schedule
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── APPLICATIONS TAB ──────────────────────────────────── -->
+  <div *ngIf="activeTab === 'applications' && !loading">
+    <div class="empty-card" *ngIf="applications.length === 0">
+      <div class="empty-icon"><span class="material-icons-outlined">description</span></div>
+      <h3>No Applications Yet</h3>
+      <p>Start your loan journey today.</p>
+      <a routerLink="/loans/apply" class="btn-apply-new">Apply Now</a>
+    </div>
+
+    <div class="app-list" *ngIf="applications.length > 0">
+      <div class="app-row" *ngFor="let app of applications">
+        <div class="app-left">
+          <div class="app-product">{{ app.productName }}</div>
+          <div class="app-meta">
+            <span>#{{ app.id }}</span>
+            <span class="dot">·</span>
+            <span>Applied {{ app.appliedAt | date:'dd MMM yyyy' }}</span>
+          </div>
+        </div>
+        <div class="app-mid">
+          <div class="app-amount">₹{{ app.requestedAmount | number:'1.0-0' }}</div>
+          <div class="app-tenure">{{ app.requestedTenureMonths }} months</div>
+        </div>
+        <div class="app-right">
+          <span [class]="statusClass(app.status)" class="status-pill">{{ app.status }}</span>
+          <div class="app-remarks" *ngIf="app.adminRemarks">{{ app.adminRemarks }}</div>
+          <div class="app-decided" *ngIf="app.decidedAt">Decided {{ app.decidedAt | date:'dd MMM yy' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

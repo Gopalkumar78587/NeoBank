@@ -1,0 +1,272 @@
+<div class="loan-dash">
+
+  <!-- ─── Header ─────────────────────────────────────────────── -->
+  <div class="dash-header">
+    <div>
+      <h2>Loan & EMI Dashboard</h2>
+      <p class="sub-text">Overview of your loans, repayments and upcoming EMIs</p>
+    </div>
+    <a routerLink="/loans/apply" class="btn-apply">
+      <span class="material-icons-outlined">add_circle_outline</span> Apply for Loan
+    </a>
+  </div>
+
+  <!-- ─── Alerts ──────────────────────────────────────────────── -->
+  <div class="alert-banner overdue-alert" *ngIf="overdueCount > 0">
+    <span class="material-icons-outlined">warning</span>
+    <strong>{{ overdueCount }} overdue EMI(s)!</strong> Please pay them immediately to avoid penalties.
+  </div>
+  <div class="alert-banner success-alert" *ngIf="paySuccess">
+    <span class="material-icons-outlined">check_circle</span> {{ paySuccess }}
+  </div>
+  <div class="alert-banner error-alert" *ngIf="error">
+    <span class="material-icons-outlined">error</span> {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <span class="material-icons-outlined spinning">sync</span> Loading your loan data...
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- ─── Stats Cards ──────────────────────────────────────── -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon"><span class="material-icons-outlined">account_balance</span></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ activeLoans }}</div>
+          <div class="stat-label">Active Loans</div>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon"><span class="material-icons-outlined">currency_rupee</span></div>
+        <div class="stat-body">
+          <div class="stat-value">₹{{ totalBorrowed | number:'1.0-0' }}</div>
+          <div class="stat-label">Total Borrowed</div>
+        </div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon"><span class="material-icons-outlined">payments</span></div>
+        <div class="stat-body">
+          <div class="stat-value">₹{{ monthlyEmiTotal | number:'1.0-0' }}</div>
+          <div class="stat-label">Monthly EMI</div>
+        </div>
+      </div>
+      <div class="stat-card" [class.red]="overdueCount > 0" [class.teal]="overdueCount === 0">
+        <div class="stat-icon">
+          <span class="material-icons-outlined">{{ overdueCount > 0 ? 'error_outline' : 'task_alt' }}</span>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overdueCount }}</div>
+          <div class="stat-label">Overdue EMIs</div>
+        </div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon"><span class="material-icons-outlined">pending_actions</span></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ pendingApplications.length }}</div>
+          <div class="stat-label">Pending Applications</div>
+        </div>
+      </div>
+      <div class="stat-card indigo">
+        <div class="stat-icon"><span class="material-icons-outlined">checklist</span></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ paidInstalments }}/{{ totalInstalments }}</div>
+          <div class="stat-label">EMIs Paid</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── No loans state ──────────────────────────────────── -->
+    <div class="empty-state" *ngIf="accounts.length === 0 && applications.length === 0">
+      <span class="material-icons-outlined empty-icon">account_balance</span>
+      <h3>No Loans Yet</h3>
+      <p>You haven't applied for any loans. Get started today!</p>
+      <a routerLink="/loans/apply" class="btn-apply">Apply for a Loan</a>
+    </div>
+
+    <!-- ─── Two-column layout ────────────────────────────────── -->
+    <div class="two-col" *ngIf="accounts.length > 0 || upcomingEmis.length > 0">
+
+      <!-- Left: Upcoming EMIs -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-outlined">calendar_month</span>
+          <h3>Upcoming EMIs</h3>
+          <span class="badge-count" *ngIf="overdueCount > 0">{{ overdueCount }} overdue</span>
+        </div>
+
+        <div class="no-data" *ngIf="upcomingEmis.length === 0">
+          <span class="material-icons-outlined">check_circle</span> All EMIs are paid!
+        </div>
+
+        <div class="emi-list" *ngIf="upcomingEmis.length > 0">
+          <div class="emi-row" *ngFor="let emi of upcomingEmis.slice(0, 8)"
+               [class.emi-overdue]="emi.paymentStatus === 'OVERDUE'">
+            <div class="emi-left">
+              <div class="emi-product">{{ emi.productName }}</div>
+              <div class="emi-meta">
+                Instalment #{{ emi.instalmentNumber }}
+                <span class="dot">·</span>
+                <span [class]="statusClass(emi.paymentStatus)" class="mini-badge">{{ emi.paymentStatus }}</span>
+              </div>
+            </div>
+            <div class="emi-center">
+              <div class="emi-date">{{ emi.dueDate | date:'dd MMM yyyy' }}</div>
+              <div class="emi-days"
+                   [class.overdue-text]="daysUntil(emi.dueDate) < 0"
+                   [class.urgent-text]="daysUntil(emi.dueDate) >= 0 && daysUntil(emi.dueDate) <= 3">
+                {{ daysUntil(emi.dueDate) < 0 ? (daysUntil(emi.dueDate) * -1) + ' days overdue'
+                   : daysUntil(emi.dueDate) === 0 ? 'Due today!'
+                   : 'in ' + daysUntil(emi.dueDate) + ' days' }}
+              </div>
+            </div>
+            <div class="emi-right">
+              <div class="emi-amount">₹{{ emi.emiAmount | number:'1.2-2' }}</div>
+              <button class="btn-pay-now" (click)="payNow(emi)"
+                      [disabled]="payingId === emi.repaymentId">
+                {{ payingId === emi.repaymentId ? '...' : 'Pay' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-footer" *ngIf="upcomingEmis.length > 8">
+          <a routerLink="/loans/my-loans" class="link-more">View all EMIs →</a>
+        </div>
+      </div>
+
+      <!-- Right: Active Loan Accounts -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-outlined">account_balance_wallet</span>
+          <h3>Active Loan Accounts</h3>
+        </div>
+
+        <div class="no-data" *ngIf="accounts.length === 0">No active loan accounts.</div>
+
+        <div class="loan-account-list">
+          <div class="loan-account-card" *ngFor="let acc of accounts">
+            <div class="account-top">
+              <div>
+                <div class="account-product">{{ acc.productName }}</div>
+                <div class="account-id">Loan #{{ acc.id }}</div>
+              </div>
+              <div class="account-emi">
+                <div class="emi-label">Monthly EMI</div>
+                <div class="emi-value">₹{{ acc.emiAmount | number:'1.2-2' }}</div>
+              </div>
+            </div>
+            <div class="account-stats">
+              <div><span class="sl">Principal</span><span class="sv">₹{{ acc.principalAmount | number:'1.0-0' }}</span></div>
+              <div><span class="sl">Rate</span><span class="sv">{{ acc.annualInterestRate }}% p.a.</span></div>
+              <div><span class="sl">Tenure</span><span class="sv">{{ acc.tenureMonths }} months</span></div>
+              <div><span class="sl">Disbursed</span><span class="sv">{{ acc.disbursedAt | date:'dd MMM yy' }}</span></div>
+            </div>
+            <!-- Repayment Progress -->
+            <div class="progress-section">
+              <div class="progress-label">
+                <span>Repayment Progress</span>
+                <span>{{ paidCount(acc) }}/{{ totalCount(acc) }} paid</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="progressPct(acc)"></div>
+              </div>
+              <div class="progress-pct">{{ progressPct(acc) }}% complete</div>
+            </div>
+            <div class="account-actions">
+              <a [routerLink]="['/loans/repayments', acc.id]" class="btn-schedule">View Schedule →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Application History ──────────────────────────────── -->
+    <div class="panel mt" *ngIf="applications.length > 0">
+      <div class="panel-header">
+        <span class="material-icons-outlined">description</span>
+        <h3>Loan Application History</h3>
+        <a routerLink="/loans/my-loans" class="link-more small">View all</a>
+      </div>
+      <table class="app-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Product</th><th>Amount</th><th>Tenure</th><th>Status</th><th>Applied</th><th>Decision</th><th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let app of applications.slice(0, 5)">
+            <td>{{ app.id }}</td>
+            <td>{{ app.productName }}</td>
+            <td>₹{{ app.requestedAmount | number:'1.0-0' }}</td>
+            <td>{{ app.requestedTenureMonths }} mo</td>
+            <td><span [class]="statusClass(app.status)" class="mini-badge">{{ app.status }}</span></td>
+            <td>{{ app.appliedAt | date:'dd MMM yy' }}</td>
+            <td>{{ app.decidedAt ? (app.decidedAt | date:'dd MMM yy') : '—' }}</td>
+            <td>{{ app.adminRemarks || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─── Quick Actions ───────────────────────────────────── -->
+    <div class="quick-actions mt">
+      <a routerLink="/loans/apply" class="qa-card">
+        <span class="material-icons-outlined">add_circle_outline</span>
+        <span>Apply for Loan</span>
+      </a>
+      <a routerLink="/loans/my-loans" class="qa-card">
+        <span class="material-icons-outlined">list_alt</span>
+        <span>My Loans & Applications</span>
+      </a>
+    </div>
+
+    <!-- ─── Help: How to Apply ───────────────────────────────── -->
+    <div class="help-section mt">
+      <div class="help-header">
+        <span class="material-icons-outlined">help_outline</span>
+        <h3>How to Apply for a Loan</h3>
+      </div>
+      <div class="help-steps">
+        <div class="help-step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Choose a Loan Product</div>
+            <div class="step-desc">Browse available loan types — Personal, Home, Auto, Education and more. Each product has its own rate, tenure and amount range.</div>
+          </div>
+        </div>
+        <div class="help-step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Set Amount & Tenure</div>
+            <div class="step-desc">Use the EMI calculator to pick a comfortable amount and repayment period. Your monthly EMI is shown live before you submit.</div>
+          </div>
+        </div>
+        <div class="help-step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Review & Submit</div>
+            <div class="step-desc">Confirm your details on the review screen and submit. Your application status will be visible here and on the My Loans page.</div>
+          </div>
+        </div>
+        <div class="help-step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Approval & Repayment</div>
+            <div class="step-desc">Once approved by admin, funds are disbursed. Pay your monthly EMIs from the Repayment Schedule page to keep your account in good standing.</div>
+          </div>
+        </div>
+      </div>
+      <div class="help-cta">
+        <a routerLink="/loans/apply" class="btn-apply">
+          <span class="material-icons-outlined">rocket_launch</span> Apply Now
+        </a>
+        <a routerLink="/loans/my-loans" class="btn-secondary-link">
+          <span class="material-icons-outlined">folder_open</span> View My Applications
+        </a>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

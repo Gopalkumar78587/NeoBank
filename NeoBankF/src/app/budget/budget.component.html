@@ -1,0 +1,375 @@
+<div class="bdg-page">
+  <header class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">
+        <span class="material-icons-outlined" style="color:#1976d2;margin-right:8px">savings</span>
+        {{ activeTab === 'overview' ? 'Budget Overview' :
+           activeTab === 'budgets' ? 'My Budgets' :
+           activeTab === 'create' ? 'Create Budget' : 'Budget Analytics' }}
+      </h1>
+      <span class="page-date live-dot">● Live</span>
+    </div>
+  </header>
+
+  <nav class="tab-strip">
+    <button [class.active]="activeTab === 'overview'" (click)="switchTab('overview')">
+      <span class="material-icons-outlined">dashboard</span><span>Overview</span>
+    </button>
+    <button [class.active]="activeTab === 'budgets'" (click)="switchTab('budgets')">
+      <span class="material-icons-outlined">account_balance_wallet</span><span>My Budgets</span>
+    </button>
+    <button [class.active]="activeTab === 'create'" (click)="switchTab('create')">
+      <span class="material-icons-outlined">add_circle</span><span>Create Budget</span>
+    </button>
+    <button [class.active]="activeTab === 'analytics'" (click)="switchTab('analytics')">
+      <span class="material-icons-outlined">analytics</span><span>Analytics</span>
+    </button>
+  </nav>
+
+  <main class="main-content">
+    <div class="content-area">
+      <!-- Messages -->
+      <div class="msg success" *ngIf="successMessage">
+        <span class="material-icons-outlined">check_circle</span> {{ successMessage }}
+      </div>
+      <div class="msg error" *ngIf="errorMessage">
+        <span class="material-icons-outlined">error</span> {{ errorMessage }}
+      </div>
+
+      <!-- ═══════ OVERVIEW ═══════ -->
+      <div *ngIf="activeTab === 'overview'" class="tab-content animate-in">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card primary-card">
+            <div class="card-icon"><span class="material-icons-outlined">savings</span></div>
+            <div class="card-info">
+              <span class="card-label">Total Budget</span>
+              <span class="card-value">Rs. {{ totalBudget | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon orange"><span class="material-icons-outlined">trending_up</span></div>
+            <div class="card-info">
+              <span class="card-label">Total Spent</span>
+              <span class="card-value">Rs. {{ totalSpent | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon green"><span class="material-icons-outlined">account_balance</span></div>
+            <div class="card-info">
+              <span class="card-label">Remaining</span>
+              <span class="card-value">Rs. {{ totalRemaining | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon" [style.background]="overallPercentage >= 80 ? '#ffebee' : '#e8f5e9'" [style.color]="overallPercentage >= 80 ? '#c62828' : '#2e7d32'">
+              <span class="material-icons-outlined">speed</span>
+            </div>
+            <div class="card-info">
+              <span class="card-label">Usage</span>
+              <span class="card-value">{{ overallPercentage }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="alert-banner warning" *ngFor="let alert of alerts">
+          <span class="material-icons-outlined">{{ alert.type === 'EXCEEDED' ? 'error' : 'warning' }}</span>
+          <span>{{ alert.message }}</span>
+        </div>
+
+        <!-- Overall Progress -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">pie_chart</span> Monthly Budget Progress</h3>
+            <span class="live-badge">● Real-time</span>
+          </div>
+          <div class="overall-progress" *ngIf="budgets.length > 0">
+            <div class="progress-ring-wrap">
+              <svg viewBox="0 0 120 120" class="progress-ring">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#e5e7eb" stroke-width="10"/>
+                <circle cx="60" cy="60" r="52" fill="none"
+                  [attr.stroke]="overallPercentage >= 100 ? '#dc2626' : overallPercentage >= 80 ? '#f59e0b' : '#22c55e'"
+                  stroke-width="10" stroke-linecap="round"
+                  [attr.stroke-dasharray]="326.7"
+                  [attr.stroke-dashoffset]="326.7 - (326.7 * Math.min(overallPercentage, 100) / 100)"
+                  transform="rotate(-90 60 60)"/>
+              </svg>
+              <div class="progress-ring-text">
+                <span class="ring-pct">{{ overallPercentage }}%</span>
+                <span class="ring-label">Used</span>
+              </div>
+            </div>
+            <div class="progress-details">
+              <div class="progress-stat" *ngFor="let b of budgets">
+                <div class="stat-header">
+                  <span class="material-icons-outlined" [style.color]="b.color">{{ b.icon }}</span>
+                  <span class="stat-name">{{ b.name }}</span>
+                  <span class="stat-pct" [style.color]="getStatusColor(b)">{{ getPercentage(b) }}%</span>
+                </div>
+                <div class="stat-bar">
+                  <div class="stat-fill" [style.width.%]="getPercentage(b)" [style.background]="getStatusColor(b)"></div>
+                </div>
+                <div class="stat-values">
+                  <span>Rs.{{ b.spent | number:'1.0-0' }}</span>
+                  <span>Rs.{{ b.limit | number:'1.0-0' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state when no budgets -->
+          <div class="empty-budget-state" *ngIf="budgets.length === 0">
+            <div class="empty-illust">
+              <span class="material-icons-outlined">savings</span>
+            </div>
+            <h3>No budget categories yet</h3>
+            <p>Create your first budget category to start tracking spending and get smart alerts when you near your limit.</p>
+            <button class="primary-btn" style="max-width:240px;margin:0 auto;" (click)="switchTab('create')">
+              <span class="material-icons-outlined">add_circle</span> Create First Budget
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ MY BUDGETS ═══════ -->
+      <div *ngIf="activeTab === 'budgets'" class="tab-content animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">category</span> Budget Categories</h3>
+            <button class="toggle-btn danger" (click)="resetAll()">
+              <span class="material-icons-outlined">restart_alt</span> Reset All
+            </button>
+          </div>
+
+          <div class="budget-grid" *ngIf="budgets.length > 0">
+            <div class="budget-card" *ngFor="let b of budgets" [class.exceeded]="b.spent > b.limit" [class.warning]="b.spent >= b.limit * 0.8 && b.spent <= b.limit">
+              <div class="budget-card-top">
+                <div class="budget-icon" [style.background]="b.color + '20'" [style.color]="b.color">
+                  <span class="material-icons-outlined">{{ b.icon }}</span>
+                </div>
+                <div class="budget-actions-mini">
+                  <button class="mini-btn edit" (click)="startEdit(b)" *ngIf="editingBudgetId !== b.id" title="Edit">
+                    <span class="material-icons-outlined">edit</span>
+                  </button>
+                  <button class="mini-btn delete" (click)="deleteBudget(b)" title="Delete">
+                    <span class="material-icons-outlined">delete</span>
+                  </button>
+                </div>
+              </div>
+              <h4 class="budget-name">{{ b.name }}</h4>
+              <div class="budget-amounts">
+                <span class="budget-spent" [style.color]="getStatusColor(b)">Rs.{{ b.spent | number:'1.0-0' }}</span>
+                <span class="budget-limit">/ Rs.{{ b.limit | number:'1.0-0' }}</span>
+              </div>
+              <div class="budget-bar">
+                <div class="budget-fill" [style.width.%]="getPercentage(b)" [style.background]="getStatusColor(b)"></div>
+              </div>
+              <div class="budget-footer">
+                <span class="budget-status" [style.color]="getStatusColor(b)">{{ getStatusLabel(b) }}</span>
+                <span class="budget-pct">{{ getPercentage(b) }}%</span>
+              </div>
+
+              <!-- Inline Edit -->
+              <div class="inline-edit-wrap" *ngIf="editingBudgetId === b.id">
+                <label>New Limit (Rs.)</label>
+                <input type="number" [(ngModel)]="editLimit" min="100" class="edit-input" />
+                <div class="edit-btns">
+                  <button class="save-btn" (click)="saveEdit(b)"><span class="material-icons-outlined">check</span> Save</button>
+                  <button class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state for budgets tab -->
+          <div class="empty-budget-state" *ngIf="budgets.length === 0">
+            <div class="empty-illust">
+              <span class="material-icons-outlined">category</span>
+            </div>
+            <h3>No budget categories</h3>
+            <p>Add categories like Food, Transport, Shopping &mdash; we'll auto-track your spending.</p>
+            <button class="primary-btn" style="max-width:240px;margin:0 auto;" (click)="switchTab('create')">
+              <span class="material-icons-outlined">add_circle</span> Create First Budget
+            </button>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="activeTab === 'create'" class="tab-content animate-in">
+        <div class="create-layout">
+
+          <!-- Form Panel -->
+          <div class="panel create-form-panel">
+            <div class="panel-header create-panel-header">
+              <div class="create-header-icon">
+                <span class="material-icons-outlined">add_circle</span>
+              </div>
+              <div>
+                <h3>Create New Budget</h3>
+                <p class="create-subtitle">Set a spending limit for a category</p>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="field-label">
+                    <span class="material-icons-outlined field-icon">label</span> Category Name
+                  </label>
+                  <input type="text" [(ngModel)]="newBudget.name" placeholder="e.g. Travel, Food, Gym" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label class="field-label">
+                    <span class="material-icons-outlined field-icon">currency_rupee</span> Budget Limit (₹)
+                  </label>
+                  <input type="number" [(ngModel)]="newBudget.limit" min="100" placeholder="Enter amount" class="form-input" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="field-label">
+                  <span class="material-icons-outlined field-icon">schedule</span> Period
+                </label>
+                <div class="period-toggle">
+                  <button class="period-btn" [class.active]="newBudget.period === 'MONTHLY'" (click)="newBudget.period = 'MONTHLY'">
+                    <span class="material-icons-outlined">calendar_month</span> Monthly
+                  </button>
+                  <button class="period-btn" [class.active]="newBudget.period === 'WEEKLY'" (click)="newBudget.period = 'WEEKLY'">
+                    <span class="material-icons-outlined">date_range</span> Weekly
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="field-label">
+                  <span class="material-icons-outlined field-icon">interests</span> Icon
+                </label>
+                <div class="icon-picker">
+                  <button *ngFor="let ic of iconOptions" class="icon-option"
+                    [class.selected]="newBudget.icon === ic"
+                    (click)="newBudget.icon = ic"
+                    [title]="ic">
+                    <span class="material-icons-outlined">{{ ic }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="field-label">
+                  <span class="material-icons-outlined field-icon">palette</span> Color
+                </label>
+                <div class="color-picker">
+                  <button *ngFor="let c of colorOptions" class="color-option"
+                    [class.selected]="newBudget.color === c"
+                    [style.background]="c"
+                    (click)="newBudget.color = c">
+                    <span *ngIf="newBudget.color === c" class="material-icons-outlined color-check">check</span>
+                  </button>
+                </div>
+              </div>
+
+              <button class="create-submit-btn" (click)="createBudget()">
+                <span class="material-icons-outlined">add_circle</span> Create Budget
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Preview Card -->
+          <div class="create-preview-col">
+            <div class="preview-label">Live Preview</div>
+            <div class="preview-card-new" [style.border-color]="newBudget.color + '44'">
+              <div class="preview-icon-wrap" [style.background]="newBudget.color + '18'">
+                <span class="material-icons-outlined preview-icon" [style.color]="newBudget.color">{{ newBudget.icon }}</span>
+              </div>
+              <div class="preview-info">
+                <span class="preview-name">{{ newBudget.name || 'Category Name' }}</span>
+                <span class="preview-period" [style.background]="newBudget.color + '18'" [style.color]="newBudget.color">{{ newBudget.period }}</span>
+              </div>
+              <div class="preview-amount-row">
+                <span class="preview-spent">₹0 spent</span>
+                <span class="preview-limit">of ₹{{ (newBudget.limit || 0) | number:'1.0-0' }}</span>
+              </div>
+              <div class="preview-bar-bg">
+                <div class="preview-bar-fill" [style.width]="'0%'" [style.background]="newBudget.color"></div>
+              </div>
+              <div class="preview-footer">0% used</div>
+            </div>
+
+            <div class="create-tips">
+              <div class="tip-header"><span class="material-icons-outlined">tips_and_updates</span> Tips</div>
+              <ul>
+                <li>Start with major expense categories first</li>
+                <li>Set realistic limits based on past spending</li>
+                <li>Use monthly budgets for recurring expenses</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ═══════ ANALYTICS ═══════ -->
+      <div *ngIf="activeTab === 'analytics'" class="tab-content animate-in">
+        <div class="charts-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3><span class="material-icons-outlined">donut_large</span> Spending Distribution</h3>
+            </div>
+            <div class="chart-wrap"><canvas id="budgetDoughnut" height="280"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h3><span class="material-icons-outlined">bar_chart</span> Budget vs Spent</h3>
+            </div>
+            <div class="chart-wrap"><canvas id="budgetBar" height="280"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Category breakdown table -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">table_chart</span> Category Breakdown</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Budget</th>
+                  <th>Spent</th>
+                  <th>Remaining</th>
+                  <th>Usage</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let b of budgets">
+                  <td>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span class="material-icons-outlined" [style.color]="b.color" style="font-size:18px">{{ b.icon }}</span>
+                      {{ b.name }}
+                    </div>
+                  </td>
+                  <td>Rs.{{ b.limit | number:'1.0-0' }}</td>
+                  <td [style.color]="getStatusColor(b)" style="font-weight:700">Rs.{{ b.spent | number:'1.0-0' }}</td>
+                  <td>Rs.{{ (b.limit - b.spent) | number:'1.0-0' }}</td>
+                  <td>
+                    <div class="mini-bar">
+                      <div class="mini-fill" [style.width.%]="getPercentage(b)" [style.background]="getStatusColor(b)"></div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-pill" [style.background]="getStatusColor(b) + '20'" [style.color]="getStatusColor(b)">
+                      {{ getStatusLabel(b) }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

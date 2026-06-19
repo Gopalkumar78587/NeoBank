@@ -1,0 +1,109 @@
+<div class="page">
+  <div class="header">
+    <div>
+      <h1><span class="material-icons-outlined">history</span> System Audit Log</h1>
+      <p>API health monitoring — last 24h • Sprint 5 / FR-7.2</p>
+    </div>
+  </div>
+
+  <!-- Health KPIs -->
+  <div class="kpi-grid" *ngIf="health">
+    <div class="kpi blue">
+      <span class="material-icons-outlined">article</span>
+      <div><label>Total Logs</label><strong>{{ health.totalLogs | number }}</strong></div>
+    </div>
+    <div class="kpi red">
+      <span class="material-icons-outlined">error</span>
+      <div><label>4xx + 5xx Errors</label><strong>{{ health.totalErrors | number }}</strong></div>
+    </div>
+    <div class="kpi green">
+      <span class="material-icons-outlined">speed</span>
+      <div><label>Avg Response (24h)</label><strong>{{ health.avgResponseMs | number:'1.0-1' }} ms</strong></div>
+    </div>
+  </div>
+
+  <!-- Health Charts -->
+  <div class="row-2">
+    <div class="card">
+      <div class="card-header"><h3><span class="material-icons-outlined">trending_up</span> Hourly Error Rate (%)</h3></div>
+      <div class="chart-wrap"><canvas baseChart *ngIf="errorRateData.labels?.length"
+                                       [data]="errorRateData" [options]="errorRateOptions" type="line"></canvas>
+        <div *ngIf="!errorRateData.labels?.length" class="empty-state">
+          <span class="material-icons-outlined">timeline</span> No data yet</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3><span class="material-icons-outlined">speed</span> Avg Response Time (ms)</h3></div>
+      <div class="chart-wrap"><canvas baseChart *ngIf="rtData.labels?.length"
+                                       [data]="rtData" [options]="rtOptions" type="line"></canvas>
+        <div *ngIf="!rtData.labels?.length" class="empty-state">
+          <span class="material-icons-outlined">timeline</span> No data yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Grid -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span class="material-icons-outlined">list_alt</span> Audit Log Entries</h3>
+      <span class="card-sub">{{ filtered.length }} / {{ totalElements }} entries</span>
+    </div>
+
+    <div class="filters">
+      <div class="search-box">
+        <span class="material-icons-outlined">search</span>
+        <input type="text" [(ngModel)]="search" (input)="applyFilters()"
+               placeholder="Search endpoint or error..." />
+      </div>
+      <div class="status-pills">
+        <button [class.active]="statusFilter === ''"    (click)="statusFilter = ''; applyFilters()">All</button>
+        <button [class.active]="statusFilter === '2xx'" (click)="statusFilter = '2xx'; applyFilters()">2xx</button>
+        <button [class.active]="statusFilter === '4xx'" (click)="statusFilter = '4xx'; applyFilters()">4xx</button>
+        <button [class.active]="statusFilter === '5xx'" (click)="statusFilter = '5xx'; applyFilters()">5xx</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="logs-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Status</th>
+            <th>Time (ms)</th>
+            <th>User ID</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let l of filtered">
+            <td>{{ l.eventTimestamp | date:'dd MMM yy HH:mm:ss' }}</td>
+            <td><span class="method-pill">{{ l.httpMethod }}</span></td>
+            <td class="endpoint-cell">{{ l.endpoint }}</td>
+            <td><span [class]="statusClass(l.responseStatus)">{{ l.responseStatus }}</span></td>
+            <td>{{ l.executionTimeMs }}</td>
+            <td>{{ l.actingUserId || '—' }}</td>
+            <td class="error-cell">{{ l.errorMessage || '—' }}</td>
+          </tr>
+          <tr *ngIf="filtered.length === 0">
+            <td colspan="7" class="empty-row">
+              <span class="material-icons-outlined">inbox</span>
+              No log entries match the filters.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button (click)="prev()" [disabled]="page === 0">
+        <span class="material-icons-outlined">chevron_left</span> Previous
+      </button>
+      <span>Page {{ page + 1 }} of {{ totalPages || 1 }}</span>
+      <button (click)="next()" [disabled]="page >= totalPages - 1">
+        Next <span class="material-icons-outlined">chevron_right</span>
+      </button>
+    </div>
+  </div>
+</div>

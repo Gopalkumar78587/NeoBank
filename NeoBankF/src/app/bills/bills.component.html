@@ -1,0 +1,458 @@
+<div class="bill-page">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">
+        {{ activeTab === 'overview' ? 'Bill Dashboard' :
+           activeTab === 'bills' ? 'All Bills' :
+           activeTab === 'create' ? 'Create Bill' : 'Bill Analytics' }}
+      </h1>
+      <div class="live-indicator" [class.live]="isLive" (click)="toggleLive()">
+        <span class="live-dot"></span>
+        {{ isLive ? 'LIVE' : 'PAUSED' }}
+        <span class="last-update">Updated: {{ lastUpdated | date:'mediumTime' }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs strip -->
+  <nav class="tab-strip">
+    <button (click)="switchTab('overview')" [class.active]="activeTab === 'overview'">
+      <span class="material-icons-outlined">dashboard</span><span>Overview</span>
+    </button>
+    <button (click)="switchTab('bills')" [class.active]="activeTab === 'bills'">
+      <span class="material-icons-outlined">receipt_long</span><span>All Bills</span>
+    </button>
+    <button (click)="switchTab('create')" [class.active]="activeTab === 'create'">
+      <span class="material-icons-outlined">add_circle</span><span>New Bill</span>
+    </button>
+    <button (click)="switchTab('analytics')" [class.active]="activeTab === 'analytics'">
+      <span class="material-icons-outlined">analytics</span><span>Analytics</span>
+    </button>
+  </nav>
+
+  <main class="main-content">
+    <!-- Global Messages -->
+    <div class="content-area">
+      <div class="msg success" *ngIf="successMessage">
+        <span class="material-icons-outlined">check_circle</span> {{ successMessage }}
+      </div>
+      <div class="msg error" *ngIf="errorMessage">
+        <span class="material-icons-outlined">error</span> {{ errorMessage }}
+      </div>
+
+      <!-- ------- OVERVIEW TAB ------- -->
+      <div *ngIf="activeTab === 'overview'" class="tab-content animate-in">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card primary-card">
+            <div class="card-icon"><span class="material-icons-outlined">pending_actions</span></div>
+            <div class="card-info">
+              <span class="card-label">Pending Amount</span>
+              <span class="card-value">Rs. {{ totalPendingAmount | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon green"><span class="material-icons-outlined">check_circle</span></div>
+            <div class="card-info">
+              <span class="card-label">Paid This Month</span>
+              <span class="card-value">Rs. {{ paidThisMonth | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon orange"><span class="material-icons-outlined">schedule</span></div>
+            <div class="card-info">
+              <span class="card-label">Upcoming (7 days)</span>
+              <span class="card-value">{{ upcomingCount }}</span>
+            </div>
+          </div>
+          <div class="summary-card" [class.danger-card]="overdueCount > 0">
+            <div class="card-icon red"><span class="material-icons-outlined">warning</span></div>
+            <div class="card-info">
+              <span class="card-label">Overdue</span>
+              <span class="card-value">{{ overdueCount }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overdue Alert -->
+        <div class="alert-banner danger" *ngIf="overdueCount > 0">
+          <span class="material-icons-outlined">notification_important</span>
+          <div>
+            <strong>{{ overdueCount }} bill(s) overdue!</strong>
+            <p>Please pay immediately to avoid penalties.</p>
+          </div>
+          <button class="alert-btn" (click)="statusFilter = 'OVERDUE'; switchTab('bills')">View Overdue</button>
+        </div>
+
+        <!-- Upcoming Bills -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">upcoming</span> Upcoming Bills</h3>
+            <button class="toggle-btn" (click)="switchTab('bills')">View All</button>
+          </div>
+          <div class="bill-cards" *ngIf="bills.length > 0">
+            <div class="bill-card" *ngFor="let bill of bills | slice:0:6"
+                 [class.overdue]="bill.status === 'OVERDUE'"
+                 [class.paid]="bill.status === 'PAID'">
+              <div class="bill-card-top">
+                <div class="bill-icon">
+                  <span class="material-icons-outlined">{{ getCategoryIcon(bill.category) }}</span>
+                </div>
+                <span class="bill-status-badge" [ngClass]="getStatusClass(bill.status)">
+                  {{ bill.status }}
+                </span>
+              </div>
+              <h4 class="bill-name">{{ bill.billerName }}</h4>
+              <p class="bill-category">{{ bill.category || 'General' }}</p>
+              <p class="bill-amount">Rs. {{ bill.amount | number:'1.2-2' }}</p>
+              <div class="bill-due">
+                <span class="material-icons-outlined">event</span>
+                {{ bill.dueDate | date:'mediumDate' }}
+                <span class="due-label" [class.urgent]="getDaysUntilDue(bill.dueDate) <= 3 && bill.status !== 'PAID'">
+                  {{ getDueLabel(bill.dueDate) }}
+                </span>
+              </div>
+              <div class="bill-card-actions" *ngIf="bill.status === 'PENDING' || bill.status === 'OVERDUE'">
+                <button class="pay-btn" (click)="payBill(bill)">
+                  <span class="material-icons-outlined">payment</span> Pay Now
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="empty-inline" *ngIf="bills.length === 0">
+            <span class="material-icons-outlined" style="font-size:48px;color:#d1d5db">receipt_long</span>
+            <p>No bills yet. Create your first bill!</p>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <div class="action-card" (click)="switchTab('create')">
+            <span class="material-icons-outlined">add_circle</span>
+            <span>New Bill</span>
+          </div>
+          <div class="action-card" (click)="switchTab('analytics')">
+            <span class="material-icons-outlined">bar_chart</span>
+            <span>Analytics</span>
+          </div>
+          <div class="action-card" (click)="statusFilter = 'PENDING'; switchTab('bills')">
+            <span class="material-icons-outlined">pending</span>
+            <span>Pending Bills</span>
+          </div>
+          <div class="action-card" (click)="statusFilter = 'PAID'; switchTab('bills')">
+            <span class="material-icons-outlined">done_all</span>
+            <span>Payment History</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------- ALL BILLS TAB ------- -->
+      <div *ngIf="activeTab === 'bills'" class="tab-content animate-in">
+        <!-- Filters -->
+        <div class="filters-bar">
+          <div class="filter-group">
+            <span class="material-icons-outlined">search</span>
+            <input type="text" placeholder="Search bills..." [(ngModel)]="searchQuery" (input)="applyFilters()">
+          </div>
+          <div class="filter-group">
+            <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+              <option value="ALL">All Status</option>
+              <option value="PENDING">Pending</option>
+              <option value="PAID">Paid</option>
+              <option value="OVERDUE">Overdue</option>
+              <option value="SCHEDULED">Scheduled</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <select [(ngModel)]="categoryFilter" (change)="applyFilters()">
+              <option value="ALL">All Categories</option>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <select [(ngModel)]="sortBy" (change)="applyFilters()">
+              <option value="dueDate">Sort by Due Date</option>
+              <option value="amount">Sort by Amount</option>
+              <option value="status">Sort by Status</option>
+              <option value="name">Sort by Name</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bills-count">
+          Showing {{ filteredBills.length }} of {{ bills.length }} bills
+        </div>
+
+        <!-- Bills Table -->
+        <div class="panel" *ngIf="filteredBills.length > 0">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Biller</th>
+                  <th>Category</th>
+                  <th>Amount</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                  <th>Auto-Pay</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let bill of filteredBills"
+                    [class.row-overdue]="bill.status === 'OVERDUE'"
+                    [class.row-paid]="bill.status === 'PAID'">
+                  <td>
+                    <div class="biller-info">
+                      <span class="material-icons-outlined biller-icon">{{ getCategoryIcon(bill.category) }}</span>
+                      <div>
+                        <span class="biller-name">{{ bill.billerName }}</span>
+                        <span class="biller-ref" *ngIf="bill.referenceNumber">#{{ bill.referenceNumber }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="cat-badge">{{ bill.category || 'Other' }}</span></td>
+                  <td class="amount-cell">Rs. {{ bill.amount | number:'1.2-2' }}</td>
+                  <td>
+                    <div class="due-cell">
+                      {{ bill.dueDate | date:'mediumDate' }}
+                      <span class="due-tag" [class.urgent]="getDaysUntilDue(bill.dueDate) <= 3 && bill.status !== 'PAID'">
+                        {{ getDueLabel(bill.dueDate) }}
+                      </span>
+                    </div>
+                  </td>
+                  <td><span class="status-pill" [ngClass]="getStatusClass(bill.status)">{{ bill.status }}</span></td>
+                  <td>
+                    <label class="toggle-switch" *ngIf="bill.status === 'PENDING' || bill.status === 'SCHEDULED'">
+                      <input type="checkbox" [checked]="bill.autoPayEnabled" (change)="toggleAutoPay(bill)">
+                      <span class="slider"></span>
+                    </label>
+                    <span *ngIf="bill.status !== 'PENDING' && bill.status !== 'SCHEDULED'" class="na-text">—</span>
+                  </td>
+                  <td>
+                    <div class="action-btns">
+                      <button class="btn-pay" *ngIf="bill.status === 'PENDING' || bill.status === 'OVERDUE'" (click)="payBill(bill)" title="Pay Now">
+                        <span class="material-icons-outlined">payment</span>
+                      </button>
+                      <button class="btn-cancel" *ngIf="bill.status === 'PENDING'" (click)="cancelBill(bill)" title="Cancel">
+                        <span class="material-icons-outlined">cancel</span>
+                      </button>
+                      <span *ngIf="bill.status === 'PAID'" class="paid-check">
+                        <span class="material-icons-outlined">verified</span>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="filteredBills.length === 0 && bills.length > 0">
+          <span class="material-icons-outlined" style="font-size:56px;color:#d1d5db">search_off</span>
+          <h4>No bills found</h4>
+          <p>Try adjusting your filters or create a new bill.</p>
+        </div>
+
+        <!-- Sample bills shown when no real bills exist -->
+        <div *ngIf="bills.length === 0" class="sample-bills-section">
+          <div class="sample-banner">
+            <span class="material-icons-outlined">auto_awesome</span>
+            <div>
+              <strong>Demo Bills</strong>
+              <span>These are example bills. Add your own by clicking "Create Bill".</span>
+            </div>
+            <button class="btn-add-bill" (click)="activeTab = 'create'">
+              <span class="material-icons-outlined">add</span> Add Bill
+            </button>
+          </div>
+          <div class="panel">
+            <table class="bills-table">
+              <thead>
+                <tr>
+                  <th>Biller</th><th>Category</th><th>Amount</th><th>Due Date</th><th>Recurring</th><th>Auto Pay</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let b of sampleBills" class="sample-row">
+                  <td>
+                    <div class="biller-cell">
+                      <span class="biller-icon material-icons-outlined">receipt_long</span>
+                      <span>{{ b.billerName }}</span>
+                      <span class="demo-badge">Demo</span>
+                    </div>
+                  </td>
+                  <td><span class="cat-badge">{{ b.category }}</span></td>
+                  <td class="amount-cell">Rs. {{ b.amount | number }}</td>
+                  <td>{{ b.dueDate | date:'dd MMM yyyy' }}</td>
+                  <td>
+                    <span class="status-chip" [class.chip-yes]="b.isRecurring" [class.chip-no]="!b.isRecurring">
+                      {{ b.isRecurring ? 'Yes (' + b.recurringFrequency + ')' : 'No' }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-chip" [class.chip-yes]="b.autoPayEnabled" [class.chip-no]="!b.autoPayEnabled">
+                      {{ b.autoPayEnabled ? 'Enabled' : 'Disabled' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------- CREATE BILL TAB ------- -->
+      <div *ngIf="activeTab === 'create'" class="tab-content animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">add_circle</span> Create New Bill</h3>
+          </div>
+
+          <form class="form-grid">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Biller Name *</label>
+                <input type="text" [(ngModel)]="billForm.billerName" name="biller" placeholder="e.g. Electricity Board">
+              </div>
+              <div class="form-group">
+                <label>Category *</label>
+                <select [(ngModel)]="billForm.category" name="category">
+                  <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Amount (Rs.) *</label>
+                <input type="number" min="1" [(ngModel)]="billForm.amount" name="amount" placeholder="Enter amount">
+              </div>
+              <div class="form-group">
+                <label>Due Date *</label>
+                <input type="date" [(ngModel)]="billForm.dueDate" name="dueDate">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Pay From Account</label>
+                <select [(ngModel)]="billForm.accountId" name="account">
+                  <option [ngValue]="null">Select Account</option>
+                  <option *ngFor="let acc of accounts" [ngValue]="acc.id">
+                    {{ acc.maskedAccountNumber }} — Rs. {{ acc.balance | number:'1.2-2' }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <input type="text" [(ngModel)]="billForm.description" name="desc" placeholder="Optional note">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="billForm.isRecurring" name="recurring">
+                  <span>Recurring Bill</span>
+                </label>
+              </div>
+              <div class="form-group" *ngIf="billForm.isRecurring">
+                <label>Frequency</label>
+                <select [(ngModel)]="billForm.recurringFrequency" name="freq">
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="MONTHLY">Monthly</option>
+                  <option value="QUARTERLY">Quarterly</option>
+                  <option value="YEARLY">Yearly</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="billForm.autoPayEnabled" name="autoPay">
+                  <span>Enable Auto-Pay</span>
+                </label>
+              </div>
+            </div>
+
+            <button class="primary-btn" type="button" (click)="createBill()">
+              <span class="material-icons-outlined">add_circle</span>
+              Create Bill
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ------- ANALYTICS TAB ------- -->
+      <div *ngIf="activeTab === 'analytics'" class="tab-content animate-in">
+        <!-- Analytics Summary -->
+        <div class="analytics-summary" *ngIf="analytics">
+          <div class="analytics-stat">
+            <span class="stat-label">Total Paid</span>
+            <span class="stat-value green">Rs. {{ analytics.totalPaid | number:'1.2-2' }}</span>
+          </div>
+          <div class="analytics-stat">
+            <span class="stat-label">Total Pending</span>
+            <span class="stat-value orange">Rs. {{ analytics.totalPending | number:'1.2-2' }}</span>
+          </div>
+          <div class="analytics-stat">
+            <span class="stat-label">Total Overdue</span>
+            <span class="stat-value red">Rs. {{ analytics.totalOverdue | number:'1.2-2' }}</span>
+          </div>
+          <div class="analytics-stat">
+            <span class="stat-label">Total Bills</span>
+            <span class="stat-value">{{ bills.length }}</span>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="panel chart-panel">
+            <div class="panel-header">
+              <h3><span class="material-icons-outlined">pie_chart</span> Spending by Category</h3>
+            </div>
+            <div class="chart-wrap"><canvas id="billCategoryChart" height="250"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <div class="panel-header">
+              <h3><span class="material-icons-outlined">donut_large</span> Bill Status</h3>
+            </div>
+            <div class="chart-wrap"><canvas id="billStatusChart" height="250"></canvas></div>
+          </div>
+        </div>
+        <div class="panel chart-panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">bar_chart</span> Monthly Spending Trend</h3>
+          </div>
+          <div class="chart-wrap"><canvas id="billMonthlyChart" height="120"></canvas></div>
+        </div>
+
+        <!-- Category Breakdown Table -->
+        <div class="panel" *ngIf="analytics && analytics.categoryBreakdown.length > 0">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">category</span> Category Breakdown</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Category</th><th>Bills</th><th>Total Amount</th><th>% of Total</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let cat of analytics.categoryBreakdown">
+                  <td>
+                    <span class="cat-row">
+                      <span class="material-icons-outlined">{{ getCategoryIcon(cat.category) }}</span>
+                      {{ cat.category }}
+                    </span>
+                  </td>
+                  <td>{{ cat.count }}</td>
+                  <td class="amount-cell">Rs. {{ cat.amount | number:'1.2-2' }}</td>
+                  <td>{{ (cat.amount / (totalPaidAmount + totalPendingAmount) * 100) | number:'1.1-1' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

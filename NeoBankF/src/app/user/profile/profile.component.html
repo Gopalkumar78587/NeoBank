@@ -1,0 +1,392 @@
+<div class="prof-page page">
+
+  <!-- ═══════ Header banner ═══════ -->
+  <div class="prof-banner">
+    <div class="prof-banner-bg"></div>
+    <div class="prof-banner-inner">
+      <div class="prof-avatar-wrap">
+        <div class="prof-avatar">
+          <img *ngIf="user.profilePhoto" [src]="user.profilePhoto" alt="Profile photo" />
+          <span *ngIf="!user.profilePhoto">{{ initials() }}</span>
+          <div class="prof-avatar-overlay" *ngIf="uploading">
+            <span class="spinner-lg"></span>
+          </div>
+        </div>
+        <button class="prof-photo-btn" (click)="triggerPhotoSelect()" title="Change photo" type="button">
+          <span class="material-icons-outlined">photo_camera</span>
+        </button>
+        <input #photoInput type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+      </div>
+
+      <div class="prof-identity">
+        <h1>{{ user.fullName || '—' }}</h1>
+        <div class="prof-sub">
+          <span class="material-icons-outlined">mail</span> {{ user.email || '—' }}
+        </div>
+        <div class="prof-chips">
+          <span class="badge" [ngClass]="user.kycVerified ? 'badge-success' : 'badge-warning'">
+            <span class="material-icons-outlined" style="font-size:14px">{{ user.kycVerified ? 'verified' : 'pending' }}</span>
+            {{ user.kycVerified ? 'KYC Verified' : 'KYC Pending' }}
+          </span>
+          <span class="badge badge-info">
+            <span class="material-icons-outlined" style="font-size:14px">account_balance_wallet</span>
+            {{ accounts.length }} {{ accounts.length === 1 ? 'Account' : 'Accounts' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="prof-actions" *ngIf="user.profilePhoto">
+        <button class="btn btn-ghost btn-sm" (click)="removePhoto()">
+          <span class="material-icons-outlined">delete_outline</span> Remove photo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  <div class="alert success" *ngIf="successMessage">
+    <span class="material-icons-outlined">check_circle</span> {{ successMessage }}
+  </div>
+  <div class="alert error" *ngIf="errorMessage">
+    <span class="material-icons-outlined">error_outline</span> {{ errorMessage }}
+  </div>
+
+  <!-- ═══════ Tabs ═══════ -->
+  <div class="prof-tabs">
+    <button [class.active]="activeTab==='overview'" (click)="setTab('overview')">
+      <span class="material-icons-outlined">dashboard</span> Overview
+    </button>
+    <button [class.active]="activeTab==='personal'" (click)="setTab('personal')">
+      <span class="material-icons-outlined">person</span> Personal
+    </button>
+    <button [class.active]="activeTab==='kyc'" (click)="setTab('kyc')">
+      <span class="material-icons-outlined">badge</span> KYC Details
+    </button>
+    <button [class.active]="activeTab==='address'" (click)="setTab('address')">
+      <span class="material-icons-outlined">home</span> Address
+    </button>
+    <button [class.active]="activeTab==='security'" (click)="setTab('security')">
+      <span class="material-icons-outlined">lock</span> Security
+    </button>
+  </div>
+
+  <!-- ═══════ Overview ═══════ -->
+  <section *ngIf="activeTab==='overview'" class="prof-section">
+    <div class="grid grid-3">
+      <div class="card card-hover">
+        <div class="card-body">
+          <div class="stat-label">KYC Completion</div>
+          <div class="stat-value">{{ kycPercent() }}%</div>
+          <div class="kyc-bar"><div class="kyc-fill" [style.width.%]="kycPercent()"></div></div>
+          <p class="text-muted mt-sm" style="font-size:12.5px">
+            {{ user.kycVerified ? 'Your account is fully KYC verified.' : 'Complete KYC to unlock all features.' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="card card-hover">
+        <div class="card-body">
+          <div class="stat-label">Total Accounts</div>
+          <div class="stat-value">{{ accounts.length }}</div>
+          <p class="text-muted mt-sm" style="font-size:12.5px">Savings & Current accounts under your name.</p>
+        </div>
+      </div>
+
+      <div class="card card-hover">
+        <div class="card-body">
+          <div class="stat-label">Annual Income</div>
+          <div class="stat-value" style="font-size:1.4rem">{{ formatINR(user.annualIncome) }}</div>
+          <p class="text-muted mt-sm" style="font-size:12.5px">{{ user.occupation || 'Not specified' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-lg">
+      <div class="card-header">
+        <h3 class="card-title">Linked Accounts</h3>
+        <a routerLink="/customer/accounts" class="btn btn-secondary btn-sm">
+          <span class="material-icons-outlined">add</span> Open new account
+        </a>
+      </div>
+      <div class="card-body" *ngIf="accounts.length === 0">
+        <div class="empty-state">
+          <span class="material-icons-outlined">account_balance_wallet</span>
+          <h3>No accounts yet</h3>
+          <p>Open your first Savings or Current account to start banking.</p>
+        </div>
+      </div>
+      <div class="table-wrap" *ngIf="accounts.length > 0" style="border:none; border-radius:0; box-shadow:none">
+        <table class="table">
+          <thead><tr><th>Account No.</th><th>Type</th><th>Status</th><th class="text-right">Balance</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let a of accounts">
+              <td class="font-mono fw-600">{{ a.accountNumber }}</td>
+              <td>{{ a.accountType }}</td>
+              <td>
+                <span class="badge"
+                  [ngClass]="a.status === 'ACTIVE' ? 'badge-success' : a.status === 'FROZEN' ? 'badge-warning' : 'badge-error'">
+                  {{ a.status }}
+                </span>
+              </td>
+              <td class="text-right fw-700">{{ formatINR(a.balance) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ Personal ═══════ -->
+  <section *ngIf="activeTab==='personal'" class="prof-section">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">Personal Information</h3>
+          <p class="card-subtitle">Your name, contact and basic details.</p>
+        </div>
+        <button *ngIf="!editMode" class="btn btn-secondary btn-sm" (click)="enableEdit()">
+          <span class="material-icons-outlined">edit</span> Edit
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input *ngIf="editMode" class="form-input" type="text" [(ngModel)]="draft.fullName" />
+            <div *ngIf="!editMode" class="info-value">{{ user.fullName || '—' }}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" type="email" [value]="user.email" disabled />
+            <span class="form-help">Email cannot be changed</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mobile Number</label>
+            <input *ngIf="editMode" class="form-input" type="tel" maxlength="10" [(ngModel)]="draft.phone" placeholder="10-digit mobile" />
+            <div *ngIf="!editMode" class="info-value">{{ user.phone || '—' }}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date of Birth</label>
+            <input *ngIf="editMode" class="form-input" type="date" [(ngModel)]="draft.dateOfBirth" />
+            <div *ngIf="!editMode" class="info-value">{{ user.dateOfBirth || '—' }}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <select *ngIf="editMode" class="form-select" [(ngModel)]="draft.gender">
+              <option value="">Select</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+            <div *ngIf="!editMode" class="info-value">{{ user.gender || '—' }}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Occupation</label>
+            <select *ngIf="editMode" class="form-select" [(ngModel)]="draft.occupation">
+              <option value="">Select</option>
+              <option>Salaried</option><option>Self-Employed</option><option>Business Owner</option>
+              <option>Student</option><option>Homemaker</option><option>Retired</option><option>Other</option>
+            </select>
+            <div *ngIf="!editMode" class="info-value">{{ user.occupation || '—' }}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Annual Income</label>
+            <input *ngIf="editMode" class="form-input" type="number" [(ngModel)]="draft.annualIncome" placeholder="₹" />
+            <div *ngIf="!editMode" class="info-value">{{ formatINR(user.annualIncome) }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer" *ngIf="editMode">
+        <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveProfile()">
+          <span class="material-icons-outlined">save</span> Save changes
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ KYC ═══════ -->
+  <section *ngIf="activeTab==='kyc'" class="prof-section">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">KYC Documents</h3>
+          <p class="card-subtitle">Aadhaar & PAN once set cannot be modified. Contact support to update.</p>
+        </div>
+        <span class="badge" [ngClass]="user.kycVerified ? 'badge-success' : 'badge-warning'">
+          {{ user.kycVerified ? 'Verified' : 'Pending' }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label">Aadhaar Number</label>
+            <input *ngIf="editMode && !user.aadhaar" class="form-input" type="text" maxlength="12"
+              [(ngModel)]="draft.aadhaar" placeholder="12-digit Aadhaar" />
+            <div *ngIf="!editMode || user.aadhaar" class="info-value font-mono">{{ user.aadhaar || '—' }}</div>
+            <span class="form-help" *ngIf="user.aadhaar">Last 4 digits visible for security</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">PAN Number</label>
+            <input *ngIf="editMode && !user.pan" class="form-input" type="text" maxlength="10"
+              style="text-transform: uppercase" [(ngModel)]="draft.pan" placeholder="ABCDE1234F" />
+            <div *ngIf="!editMode || user.pan" class="info-value font-mono">{{ user.pan || '—' }}</div>
+          </div>
+        </div>
+
+        <div class="kyc-info-box">
+          <span class="material-icons-outlined">info</span>
+          <div>
+            <strong>Why we collect KYC?</strong>
+            <p>As per RBI guidelines, banks must verify the identity of every customer. Your Aadhaar &amp; PAN are stored encrypted and never shared with third parties.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer" *ngIf="editMode && (!user.aadhaar || !user.pan)">
+        <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveProfile()">
+          <span class="material-icons-outlined">verified</span> Submit for verification
+        </button>
+      </div>
+      <div class="card-footer" *ngIf="!editMode && (!user.aadhaar || !user.pan)">
+        <button class="btn btn-primary" (click)="enableEdit()">
+          <span class="material-icons-outlined">badge</span> Complete KYC now
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ Address ═══════ -->
+  <section *ngIf="activeTab==='address'" class="prof-section">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">Communication Address</h3>
+          <p class="card-subtitle">Used for statements, cheque books and other physical communication.</p>
+        </div>
+        <button *ngIf="!editMode" class="btn btn-secondary btn-sm" (click)="enableEdit()">
+          <span class="material-icons-outlined">edit</span> Edit
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Address Line</label>
+          <input *ngIf="editMode" class="form-input" [(ngModel)]="draft.addressLine" />
+          <div *ngIf="!editMode" class="info-value">{{ user.addressLine || '—' }}</div>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input *ngIf="editMode" class="form-input" [(ngModel)]="draft.city" />
+            <div *ngIf="!editMode" class="info-value">{{ user.city || '—' }}</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">State</label>
+            <input *ngIf="editMode" class="form-input" [(ngModel)]="draft.state" />
+            <div *ngIf="!editMode" class="info-value">{{ user.state || '—' }}</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pincode</label>
+            <input *ngIf="editMode" class="form-input" maxlength="6" [(ngModel)]="draft.pincode" />
+            <div *ngIf="!editMode" class="info-value">{{ user.pincode || '—' }}</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <input *ngIf="editMode" class="form-input" [(ngModel)]="draft.country" />
+            <div *ngIf="!editMode" class="info-value">{{ user.country || '—' }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer" *ngIf="editMode">
+        <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveProfile()">
+          <span class="material-icons-outlined">save</span> Save address
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ Security ═══════ -->
+  <section *ngIf="activeTab==='security'" class="prof-section">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Change Password</h3>
+      </div>
+      <div class="card-body">
+
+        <div class="alert success" *ngIf="pwdMessage">
+          <span class="material-icons-outlined">check_circle</span> {{ pwdMessage }}
+        </div>
+        <div class="alert error" *ngIf="pwdError">
+          <span class="material-icons-outlined">error_outline</span> {{ pwdError }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Current Password</label>
+          <div class="pwd-row">
+            <input class="form-input" [type]="showCurrent ? 'text' : 'password'"
+              [(ngModel)]="pwd.current" autocomplete="current-password" />
+            <button type="button" class="pwd-eye" (click)="showCurrent = !showCurrent">
+              <span class="material-icons-outlined">{{ showCurrent ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <div class="pwd-row">
+            <input class="form-input" [type]="showNext ? 'text' : 'password'"
+              [(ngModel)]="pwd.next" autocomplete="new-password" />
+            <button type="button" class="pwd-eye" (click)="showNext = !showNext">
+              <span class="material-icons-outlined">{{ showNext ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          <div class="strength-bar" *ngIf="pwd.next">
+            <div class="strength-fill" [style.width.%]="newPwdStrength * 25" [style.background]="pwdStrengthColor"></div>
+          </div>
+          <span class="form-help" *ngIf="pwd.next" [style.color]="pwdStrengthColor">{{ pwdStrengthLabel }}</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirm New Password</label>
+          <div class="pwd-row">
+            <input class="form-input" [type]="showConfirm ? 'text' : 'password'"
+              [(ngModel)]="pwd.confirm" autocomplete="new-password" />
+            <button type="button" class="pwd-eye" (click)="showConfirm = !showConfirm">
+              <span class="material-icons-outlined">{{ showConfirm ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-primary" (click)="changePassword()" [disabled]="pwdLoading">
+          <span class="material-icons-outlined" *ngIf="!pwdLoading">lock_reset</span>
+          <span class="spinner" *ngIf="pwdLoading"></span>
+          {{ pwdLoading ? 'Updating...' : 'Update password' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="card mt-lg">
+      <div class="card-header">
+        <h3 class="card-title">Security Tips</h3>
+      </div>
+      <div class="card-body">
+        <ul class="sec-tips">
+          <li><span class="material-icons-outlined text-success">check_circle</span> Use a unique password not used on any other site.</li>
+          <li><span class="material-icons-outlined text-success">check_circle</span> Never share your OTP, PIN or password — bank staff will never ask.</li>
+          <li><span class="material-icons-outlined text-success">check_circle</span> Always log out after use on shared devices.</li>
+          <li><span class="material-icons-outlined text-success">check_circle</span> Report suspicious activity immediately via support.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>

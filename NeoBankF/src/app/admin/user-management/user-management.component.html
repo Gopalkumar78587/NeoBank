@@ -1,0 +1,127 @@
+<div class="page-wrap">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <a routerLink="/admin/dashboard" class="back-link"><span class="material-icons-outlined">arrow_back</span></a>
+      <h2><span class="material-icons-outlined">manage_accounts</span> User Management</h2>
+    </div>
+    <button class="btn-refresh" (click)="loadUsers(); loadHealth()">
+      <span class="material-icons-outlined">refresh</span> Refresh
+    </button>
+  </header>
+
+  <!-- Alerts -->
+  <div *ngIf="successMsg" class="alert success"><span class="material-icons-outlined">check_circle</span>{{ successMsg }}</div>
+  <div *ngIf="errorMsg" class="alert error"><span class="material-icons-outlined">error</span>{{ errorMsg }}</div>
+
+  <!-- System Health Panel -->
+  <div class="health-panel" *ngIf="!healthLoading && systemHealth">
+    <div class="health-item">
+      <span class="material-icons-outlined" [class.up]="systemHealth.dbStatus==='UP'" [class.down]="systemHealth.dbStatus!=='UP'">
+        {{ systemHealth.dbStatus === 'UP' ? 'cloud_done' : 'cloud_off' }}
+      </span>
+      <div>
+        <span class="h-label">Database</span>
+        <span class="h-val" [class.up]="systemHealth.dbStatus==='UP'" [class.down]="systemHealth.dbStatus!=='UP'">{{ systemHealth.dbStatus }}</span>
+      </div>
+    </div>
+    <div class="health-item">
+      <span class="material-icons-outlined neutral">timer</span>
+      <div><span class="h-label">Uptime</span><span class="h-val neutral">{{ formatUptime(systemHealth.serverUptimeSeconds) }}</span></div>
+    </div>
+    <div class="health-item">
+      <span class="material-icons-outlined neutral">people</span>
+      <div><span class="h-label">Active Sessions</span><span class="h-val neutral">{{ systemHealth.activeSessions }}</span></div>
+    </div>
+  </div>
+
+  <!-- Search + count -->
+  <div class="table-toolbar">
+    <div class="search-wrap">
+      <span class="material-icons-outlined search-icon">search</span>
+      <input class="search-input" type="text" placeholder="Search by name or email…" [(ngModel)]="searchQuery">
+    </div>
+    <span class="total-badge">{{ totalElements }} users</span>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loading" class="skeleton-list">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading && error" class="error-card">
+    <span class="material-icons-outlined">error_outline</span> Failed to load users.
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!loading && !error" class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Registered</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of filteredUsers; let i = index">
+          <td>{{ page * size + i + 1 }}</td>
+          <td class="name-cell">
+            <div class="user-avatar">{{ u.fullName.charAt(0) }}</div>
+            {{ u.fullName }}
+          </td>
+          <td>{{ u.email }}</td>
+          <td><span class="role-badge" [class.admin-role]="u.role==='ADMIN'">{{ u.role }}</span></td>
+          <td>
+            <span class="status-chip" [class.active-chip]="u.active" [class.inactive-chip]="!u.active">
+              {{ u.active ? 'ACTIVE' : 'INACTIVE' }}
+            </span>
+          </td>
+          <td>{{ formatDate(u.createdAt) }}</td>
+          <td>
+            <button *ngIf="u.active" class="btn-deactivate" (click)="openConfirm(u, false)">
+              <span class="material-icons-outlined">block</span> Deactivate
+            </button>
+            <button *ngIf="!u.active" class="btn-activate" (click)="openConfirm(u, true)">
+              <span class="material-icons-outlined">check_circle</span> Activate
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="page-btn" [disabled]="page === 0" (click)="prevPage()">
+      <span class="material-icons-outlined">chevron_left</span>
+    </button>
+    <span class="page-info">Page {{ page + 1 }} of {{ totalPages }}</span>
+    <button class="page-btn" [disabled]="page >= totalPages - 1" (click)="nextPage()">
+      <span class="material-icons-outlined">chevron_right</span>
+    </button>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div *ngIf="confirmDialog" class="modal-overlay" (click)="cancelConfirm()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>Confirm Action</h3>
+    <div class="modal-body">
+      <p>Are you sure you want to <strong>{{ confirmDialog.newState ? 'activate' : 'deactivate' }}</strong> the account for:</p>
+      <p class="confirm-name">{{ confirmDialog.user.fullName }}</p>
+      <p class="confirm-email">{{ confirmDialog.user.email }}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancelConfirm()">Cancel</button>
+      <button class="btn-primary" [class.danger]="!confirmDialog.newState" (click)="confirmToggle()">
+        {{ confirmDialog.newState ? 'Activate' : 'Deactivate' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+﻿.rs-wrap { min-height: calc(100vh - 64px); background: #f5f7fb; padding: 22px 28px 40px; max-width: 1400px; margin: 0 auto; }
+.rs-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; gap: 20px; flex-wrap: wrap; }
+.back-btn { display: inline-flex; align-items: center; gap: 6px; color: #4f46e5; text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; }
+.back-btn:hover { color: #4338ca; }
+.rs-header h1 { font-size: 1.7rem; font-weight: 800; color: #1a1a2e; margin: 0 0 4px; }
+.rs-header p { color: #888; margin: 0; font-size: 0.9rem; }
+.progress-card { display: flex; align-items: center; gap: 16px; background: #fff; border-radius: 16px; padding: 18px 24px; box-shadow: 0 2px 14px rgba(0,0,0,.07); }
+.pc-circle { width: 72px; height: 72px; }
+.pc-circle svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+.pc-bg { fill: none; stroke: #e8eaf6; stroke-width: 3; }
+.pc-fill { fill: none; stroke: #4f46e5; stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray .6s ease; }
+.pc-text { font-size: 7px; fill: #4f46e5; font-weight: 800; transform: rotate(90deg); transform-origin: center; dominant-baseline: middle; text-anchor: middle; }
+.pc-val { font-size: 1.3rem; font-weight: 800; color: #1a1a2e; }
+.pc-label { font-size: 0.75rem; color: #888; }
+.alert-error { display: flex; align-items: center; gap: 10px; background: #fce4ec; color: #c62828; padding: 13px 18px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #e53935; }
+.loading-state { display: flex; align-items: center; gap: 10px; justify-content: center; padding: 60px; color: #888; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinning { animation: spin 1s linear infinite; }
+.empty-state { text-align: center; padding: 60px; color: #aaa; }
+.empty-state .material-icons-outlined { font-size: 48px; display: block; margin-bottom: 12px; }
+.summary-strip { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+.ss-item { flex: 1; min-width: 150px; background: #fff; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.05); border: 1.5px solid #f0f0f0; }
+.ss-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ss-icon .material-icons-outlined { font-size: 20px; }
+.paid-icon { background: #e8f5e9; color: #388e3c; }
+.pending-icon { background: #fff3e0; color: #f57c00; }
+.emi-icon { background: #eef2ff; color: #4f46e5; }
+.ss-val { font-size: 1.1rem; font-weight: 800; color: #1a1a2e; }
+.ss-label { font-size: 0.72rem; color: #aaa; text-transform: uppercase; font-weight: 600; margin-top: 2px; }
+.schedule-panel { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,.07); border: 1.5px solid #e8eaf6; overflow-x: auto; }
+.schedule-row { display: grid; grid-template-columns: 52px 130px 120px 110px 110px 120px 100px 100px; align-items: center; border-bottom: 1px solid #f5f5f5; }
+.schedule-row:last-child { border-bottom: none; }
+.schedule-head { background: #f5f7ff; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: .4px; }
+.schedule-head > div, .schedule-row > div { padding: 13px 14px; }
+.schedule-row.row-paid { background: #f9fff9; }
+.schedule-row.row-overdue { background: #fff5f5; }
+.schedule-row:not(.schedule-head):hover { background: #f8faff; }
+.inst-number { width: 28px; height: 28px; border-radius: 50%; background: #e8eaf6; color: #555; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; }
+.inst-number.in-paid { background: #e8f5e9; color: #2e7d32; }
+.inst-number.in-overdue { background: #fce4ec; color: #c62828; }
+.date-main { font-size: 0.88rem; font-weight: 600; color: #333; }
+.col-emi strong { color: #4f46e5; font-size: 0.9rem; }
+.status-pill-sm { padding: 4px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 800; white-space: nowrap; }
+.badge-warning { background: #fff3e0; color: #e65100; }
+.badge-success { background: #e8f5e9; color: #1b5e20; }
+.badge-danger { background: #fce4ec; color: #c62828; }
+.paid-date { font-size: 0.8rem; color: #4caf50; font-weight: 600; }
+.na { color: #ccc; }
+.pay-btn { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #4f46e5, #4338ca); color: #fff; border: none; padding: 7px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all .2s; }
+.pay-btn:hover:not(:disabled) { background: linear-gradient(135deg, #4338ca, #312e81); }
+.pay-btn:disabled { background: #90caf9; cursor: not-allowed; }
+.pay-btn .material-icons-outlined { font-size: 14px; }
+.paid-check { color: #4caf50; display: flex; align-items: center; }
+.paid-check .material-icons-outlined { font-size: 22px; }

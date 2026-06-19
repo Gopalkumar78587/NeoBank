@@ -1,0 +1,86 @@
+// ════════════════════════════════════════════════════════════════
+// NeoBank360 — Sass Mixins
+// Reusable building blocks for component styles.
+// ════════════════════════════════════════════════════════════════
+@use 'tokens' as t;
+
+// ─── Responsive helpers ─────────────────────────────────────────
+@mixin bp-down($bp) {
+  @media (max-width: $bp - 1px) { @content; }
+}
+@mixin bp-up($bp) {
+  @media (min-width: $bp) { @content; }
+}
+@mixin mobile   { @include bp-down(t.$bp-md) { @content; } }
+@mixin tablet   { @include bp-down(t.$bp-lg) { @content; } }
+@mixin desktop  { @include bp-up(t.$bp-lg)   { @content; } }
+
+// ─── Surface presets ────────────────────────────────────────────
+@mixin surface($radius: t.$radius-lg) {
+  background: var(--white, #ffffff);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: $radius;
+  box-shadow: var(--shadow-sm);
+}
+
+@mixin glass($alpha: 0.72, $blur: 12px) {
+  background: rgba(255, 255, 255, $alpha);
+  backdrop-filter: saturate(180%) blur($blur);
+  -webkit-backdrop-filter: saturate(180%) blur($blur);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+@mixin elevated-hover {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+// ─── Focus ring (a11y) ──────────────────────────────────────────
+@mixin focus-ring($color: var(--primary-500), $offset: 2px) {
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: $offset;
+    border-radius: 6px;
+  }
+}
+
+// ─── Truncate text ──────────────────────────────────────────────
+@mixin truncate($lines: 1) {
+  @if $lines == 1 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+// ─── Grid presets ───────────────────────────────────────────────
+@mixin auto-grid($min: 240px, $gap: t.$space-5) {
+  display: grid;
+  gap: $gap;
+  grid-template-columns: repeat(auto-fit, minmax($min, 1fr));
+}
+
+// ─── Reduced motion ─────────────────────────────────────────────
+@mixin respect-motion {
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+// ─── Visually hidden (screen-reader only) ───────────────────────
+@mixin sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}

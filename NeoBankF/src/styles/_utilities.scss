@@ -1,0 +1,44 @@
+// ════════════════════════════════════════════════════════════════
+// NeoBank360 — Utility classes (Sass-built)
+// Atomic helpers for spacing, layout, and a11y.
+// Kept intentionally small — favor design system classes first.
+// ════════════════════════════════════════════════════════════════
+@use 'tokens' as t;
+@use 'mixins' as m;
+
+// Visually-hidden helper for screen readers
+.sr-only { @include m.sr-only; }
+
+// Stack / row helpers
+.stack    { display: flex; flex-direction: column; }
+.row      { display: flex; flex-direction: row; }
+.row-wrap { display: flex; flex-direction: row; flex-wrap: wrap; }
+.center   { display: flex; align-items: center; justify-content: center; }
+
+// Gap utilities (generated)
+@each $name, $val in (1: t.$space-1, 2: t.$space-2, 3: t.$space-3,
+                      4: t.$space-4, 5: t.$space-5, 6: t.$space-6, 8: t.$space-8) {
+  .gap-#{$name}    { gap: $val; }
+  .p-#{$name}      { padding: $val; }
+  .m-#{$name}      { margin: $val; }
+  .mt-#{$name}     { margin-top: $val; }
+  .mb-#{$name}     { margin-bottom: $val; }
+}
+
+// Aspect ratios
+.aspect-square { aspect-ratio: 1 / 1; }
+.aspect-video  { aspect-ratio: 16 / 9; }
+
+// Scroll containers
+.scroll-y { overflow-y: auto; }
+.scroll-x { overflow-x: auto; }
+
+// Hide on breakpoint
+.hide-mobile  { @include m.mobile  { display: none !important; } }
+.hide-tablet  { @include m.tablet  { display: none !important; } }
+.hide-desktop { @include m.desktop { display: none !important; } }
+
+// Animations (fade up, fade in, scale in)
+.anim-fade-up { animation: fadeUp .35s cubic-bezier(.22,1,.36,1) both; @include m.respect-motion; }
+.anim-fade-in { animation: fadeIn .25s ease both; @include m.respect-motion; }
+.anim-scale   { animation: scaleIn .25s cubic-bezier(.22,1,.36,1) both; @include m.respect-motion; }

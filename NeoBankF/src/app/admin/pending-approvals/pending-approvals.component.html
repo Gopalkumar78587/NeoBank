@@ -1,0 +1,76 @@
+<div class="page-wrap">
+  <header class="page-header">
+    <div class="header-left">
+      <a routerLink="/admin/dashboard" class="back-link">
+        <span class="material-icons-outlined">arrow_back</span>
+      </a>
+      <h2>
+        <span class="material-icons-outlined">pending_actions</span>
+        Pending Approvals
+      </h2>
+    </div>
+    <button class="btn-refresh" (click)="load()">
+      <span class="material-icons-outlined">refresh</span> Refresh
+    </button>
+  </header>
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loading" class="skeleton-list">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading && error" class="error-card">
+    <span class="material-icons-outlined">error_outline</span>
+    Failed to load pending approvals.
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && !error && approvals.length === 0" class="empty-card">
+    <span class="material-icons-outlined">check_circle</span>
+    <p>No pending approvals — everything is up to date!</p>
+  </div>
+
+  <!-- Count badge -->
+  <div *ngIf="!loading && !error && approvals.length > 0" class="count-bar">
+    <span class="count-badge">{{ approvals.length }} pending</span>
+    <span class="count-note">Oldest first — review and decide each application below.</span>
+  </div>
+
+  <!-- Approval cards -->
+  <div *ngIf="!loading && !error" class="approvals-list">
+    <div class="approval-card" *ngFor="let a of approvals; let i = index">
+      <div class="approval-index">{{ i + 1 }}</div>
+      <div class="approval-body">
+        <div class="approval-top">
+          <div>
+            <div class="applicant-name">{{ a.applicantName }}</div>
+            <div class="applicant-email">{{ a.applicantEmail }}</div>
+          </div>
+          <span class="badge-pending">PENDING</span>
+        </div>
+        <div class="approval-meta">
+          <div class="meta-item">
+            <span class="meta-label">Product</span>
+            <span class="meta-val">{{ a.productName }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Amount</span>
+            <span class="meta-val amount">&#8377;{{ a.requestedAmount | number:'1.0-0' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Tenure</span>
+            <span class="meta-val">{{ a.requestedTenureMonths }} months</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Applied</span>
+            <span class="meta-val">{{ formatDate(a.appliedAt) }}</span>
+          </div>
+        </div>
+      </div>
+      <a [routerLink]="['/admin/loan-decisions']" class="btn-review">
+        <span class="material-icons-outlined">rate_review</span> Review
+      </a>
+    </div>
+  </div>
+</div>

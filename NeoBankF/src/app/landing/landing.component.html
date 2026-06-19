@@ -1,0 +1,392 @@
+<!-- ═══════ NAVBAR ═══════ -->
+<header class="navbar" [class.scrolled]="isScrolled" role="banner">
+  <div class="scroll-progress" aria-hidden="true">
+    <span class="scroll-progress-bar" [style.width.%]="scrollProgress"></span>
+  </div>
+
+  <div class="nav-inner">
+    <a routerLink="/" class="logo" aria-label="NeoBank360 home">
+      <span class="logo-icon" aria-hidden="true">
+        <span class="material-icons-outlined">account_balance</span>
+      </span>
+      <span class="logo-text">Neo<span class="highlight">Bank</span>360</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#features">Features</a>
+      <a href="#security">Security</a>
+      <a href="#testimonials">Reviews</a>
+      <a routerLink="/login" class="nav-btn outline">Sign In</a>
+      <a routerLink="/register" class="nav-btn primary">
+        <span>Open Account</span>
+        <span class="material-icons-outlined" aria-hidden="true">arrow_forward</span>
+      </a>
+    </nav>
+
+    <button class="mobile-toggle" (click)="mobileMenu = !mobileMenu"
+            [attr.aria-expanded]="mobileMenu" aria-controls="mobile-menu"
+            [attr.aria-label]="mobileMenu ? 'Close menu' : 'Open menu'">
+      <span class="material-icons-outlined">{{ mobileMenu ? 'close' : 'menu' }}</span>
+    </button>
+  </div>
+
+  <div id="mobile-menu" class="mobile-nav" *ngIf="mobileMenu" role="menu">
+    <a href="#features" (click)="mobileMenu = false" role="menuitem">Features</a>
+    <a href="#security" (click)="mobileMenu = false" role="menuitem">Security</a>
+    <a href="#testimonials" (click)="mobileMenu = false" role="menuitem">Reviews</a>
+    <a routerLink="/login" (click)="mobileMenu = false" role="menuitem">Sign In</a>
+    <a routerLink="/register" class="nav-btn primary" (click)="mobileMenu = false" role="menuitem">Open Account</a>
+  </div>
+</header>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <div class="hero-bg" aria-hidden="true">
+    <div class="hero-grid"></div>
+    <div class="hero-circle c1"></div>
+    <div class="hero-circle c2"></div>
+    <div class="hero-circle c3"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="pulse-dot" aria-hidden="true"></span>
+      Next-Gen Digital Banking Platform
+    </div>
+    <h1>Banking That Moves<br><span class="gradient-text">At Your Speed</span></h1>
+    <p class="hero-sub">
+      Open accounts, transfer funds, track spending — all from one powerful dashboard.
+      Built with enterprise-grade security and real-time processing.
+    </p>
+
+    <div class="hero-actions">
+      <a routerLink="/register" class="btn-hero primary">
+        <span class="material-icons-outlined" aria-hidden="true">rocket_launch</span>
+        Get Started Free
+      </a>
+      <a routerLink="/login" class="btn-hero secondary">
+        <span class="material-icons-outlined" aria-hidden="true">play_circle</span>
+        Sign In
+      </a>
+    </div>
+
+    <ul class="hero-stats" aria-label="Platform statistics">
+      <li class="hero-stat">
+        <span class="hero-stat-icon"><span class="material-icons-outlined">groups</span></span>
+        <div><strong>1,00,000+</strong><span>Active Users</span></div>
+      </li>
+      <li class="hero-stat-divider" aria-hidden="true"></li>
+      <li class="hero-stat">
+        <span class="hero-stat-icon"><span class="material-icons-outlined">payments</span></span>
+        <div><strong>₹100Cr+</strong><span>Processed</span></div>
+      </li>
+      <li class="hero-stat-divider" aria-hidden="true"></li>
+      <li class="hero-stat">
+        <span class="hero-stat-icon"><span class="material-icons-outlined">bolt</span></span>
+        <div><strong>99.99%</strong><span>Uptime</span></div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="hero-visual">
+    <div class="dashboard-preview" data-reveal>
+      <div class="preview-header">
+        <div class="preview-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        <span class="preview-title">NeoBank360 Dashboard</span>
+        <span class="preview-live" title="Live data">
+          <span class="pulse-dot small" aria-hidden="true"></span> LIVE
+        </span>
+      </div>
+      <div class="preview-body">
+        <div class="preview-card balance-card">
+          <span class="preview-label">Total Balance</span>
+          <span class="preview-amount">₹ 4,85,230.00</span>
+          <span class="preview-change positive">
+            <span class="material-icons-outlined" aria-hidden="true">trending_up</span>
+            12.5% this month
+          </span>
+        </div>
+        <div class="preview-row">
+          <div class="preview-mini savings">
+            <span class="material-icons-outlined" aria-hidden="true">savings</span>
+            <div><span class="mini-label">Savings</span><span class="mini-val">₹3,20,000</span></div>
+          </div>
+          <div class="preview-mini current">
+            <span class="material-icons-outlined" aria-hidden="true">account_balance_wallet</span>
+            <div><span class="mini-label">Current</span><span class="mini-val">₹1,65,230</span></div>
+          </div>
+        </div>
+        <div class="preview-txs">
+          <div class="preview-tx">
+            <div class="tx-icon credit-icon"><span class="material-icons-outlined" aria-hidden="true">south_west</span></div>
+            <div class="tx-info"><span>Salary Credit</span><span class="tx-date">Today · 09:42</span></div>
+            <span class="tx-amt credit-amt">+₹85,000</span>
+          </div>
+          <div class="preview-tx">
+            <div class="tx-icon debit-icon"><span class="material-icons-outlined" aria-hidden="true">north_east</span></div>
+            <div class="tx-info"><span>Rent Payment</span><span class="tx-date">Yesterday</span></div>
+            <span class="tx-amt debit-amt">-₹25,000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="float-tag tag-secure">
+      <span class="material-icons-outlined" aria-hidden="true">lock</span> 256-bit Encrypted
+    </div>
+    <div class="float-tag tag-rbi">
+      <span class="material-icons-outlined" aria-hidden="true">verified</span> RBI Compliant
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ METRICS RIBBON ═══════ -->
+<section class="metrics-ribbon" aria-label="Trust signals">
+  <div class="section-inner">
+    <div class="ribbon-grid">
+      <div class="ribbon-item" data-reveal>
+        <span class="material-icons-outlined" aria-hidden="true">shield</span>
+        <div><strong>ISO 27001</strong><span>Security certified</span></div>
+      </div>
+      <div class="ribbon-item" data-reveal>
+        <span class="material-icons-outlined" aria-hidden="true">verified_user</span>
+        <div><strong>RBI Compliant</strong><span>Fully regulated</span></div>
+      </div>
+      <div class="ribbon-item" data-reveal>
+        <span class="material-icons-outlined" aria-hidden="true">support_agent</span>
+        <div><strong>24×7 Support</strong><span>Always available</span></div>
+      </div>
+      <div class="ribbon-item" data-reveal>
+        <span class="material-icons-outlined" aria-hidden="true">bolt</span>
+        <div><strong>Real-time</strong><span>Instant settlement</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FEATURES ═══════ -->
+<section class="features" id="features">
+  <div class="section-inner">
+    <div class="section-badge" data-reveal>FEATURES</div>
+    <h2 class="section-title" data-reveal>Everything You Need From a <span class="gradient-text">Modern Bank</span></h2>
+    <p class="section-sub" data-reveal>Powerful tools designed for individuals and businesses alike</p>
+
+    <div class="features-grid">
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon blue"><span class="material-icons-outlined" aria-hidden="true">account_balance</span></div>
+        <h3>Multi-Account Management</h3>
+        <p>Open Savings &amp; Current accounts instantly. Manage, freeze, or close with one click.</p>
+      </div>
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon green"><span class="material-icons-outlined" aria-hidden="true">swap_horiz</span></div>
+        <h3>Instant Fund Transfers</h3>
+        <p>Transfer between your accounts or to other users instantly with zero fees.</p>
+      </div>
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon purple"><span class="material-icons-outlined" aria-hidden="true">bar_chart</span></div>
+        <h3>Real-time Analytics</h3>
+        <p>Interactive charts showing spending patterns, balance trends and history.</p>
+      </div>
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon orange"><span class="material-icons-outlined" aria-hidden="true">receipt_long</span></div>
+        <h3>PDF Statements</h3>
+        <p>Download monthly account statements in PDF format anytime.</p>
+      </div>
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon teal"><span class="material-icons-outlined" aria-hidden="true">admin_panel_settings</span></div>
+        <h3>Admin Dashboard</h3>
+        <p>Full admin panel to monitor users, accounts, and transactions.</p>
+      </div>
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon red"><span class="material-icons-outlined" aria-hidden="true">notifications_active</span></div>
+        <h3>Smart Notifications</h3>
+        <p>Get instant alerts for deposits, withdrawals, and account activity.</p>
+      </div>
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon teal"><span class="material-icons-outlined" aria-hidden="true">verified</span></div>
+        <h3>Paperless KYC</h3>
+        <p>Aadhaar &amp; PAN-based verification with secure nominee registration &mdash; RBI compliant.</p>
+      </div>
+      <div class="feature-card" data-reveal>
+        <div class="feature-icon purple"><span class="material-icons-outlined" aria-hidden="true">photo_camera</span></div>
+        <h3>Profile Photo</h3>
+        <p>Personalize your account with a profile photo and full personal-detail management.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SECURITY ═══════ -->
+<section class="security" id="security">
+  <div class="section-inner">
+    <div class="security-grid">
+      <div class="security-text" data-reveal>
+        <div class="section-badge">SECURITY</div>
+        <h2>Bank-Grade Security You Can <span class="gradient-text">Trust</span></h2>
+        <p class="sec-desc">Your data is protected with multiple layers of enterprise security protocols.</p>
+        <div class="security-features">
+          <div class="sec-item">
+            <span class="material-icons-outlined" aria-hidden="true">verified_user</span>
+            <div><h4>JWT Authentication</h4><p>Stateless, encrypted tokens for every session</p></div>
+          </div>
+          <div class="sec-item">
+            <span class="material-icons-outlined" aria-hidden="true">lock</span>
+            <div><h4>BCrypt Encryption</h4><p>Passwords hashed with industry-standard algorithms</p></div>
+          </div>
+          <div class="sec-item">
+            <span class="material-icons-outlined" aria-hidden="true">shield</span>
+            <div><h4>Role-Based Access</h4><p>Strict permission control for customers and admins</p></div>
+          </div>
+          <div class="sec-item">
+            <span class="material-icons-outlined" aria-hidden="true">https</span>
+            <div><h4>End-to-End Encryption</h4><p>All data over secure HTTPS channels</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="security-visual" data-reveal aria-hidden="true">
+        <div class="shield-container">
+          <div class="shield-ring r1"></div>
+          <div class="shield-ring r2"></div>
+          <div class="shield-ring r3"></div>
+          <div class="shield-center">
+            <span class="material-icons-outlined">security</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ HOW IT WORKS ═══════ -->
+<section class="how-it-works">
+  <div class="section-inner">
+    <div class="section-badge" data-reveal>HOW IT WORKS</div>
+    <h2 class="section-title" data-reveal>Get Started in <span class="gradient-text">3 Simple Steps</span></h2>
+    <div class="steps-grid">
+      <div class="step-card" data-reveal>
+        <div class="step-number">01</div>
+        <div class="step-icon"><span class="material-icons-outlined" aria-hidden="true">person_add</span></div>
+        <h3>Create Account</h3>
+        <p>Register with your name and email. Takes less than 60 seconds.</p>
+      </div>
+      <div class="step-connector" aria-hidden="true"><span class="material-icons-outlined">arrow_forward</span></div>
+      <div class="step-card" data-reveal>
+        <div class="step-number">02</div>
+        <div class="step-icon"><span class="material-icons-outlined" aria-hidden="true">verified_user</span></div>
+        <h3>Complete KYC</h3>
+        <p>Submit Aadhaar, PAN &amp; address details in our secure paperless flow.</p>
+      </div>
+      <div class="step-connector" aria-hidden="true"><span class="material-icons-outlined">arrow_forward</span></div>
+      <div class="step-card" data-reveal>
+        <div class="step-number">03</div>
+        <div class="step-icon"><span class="material-icons-outlined" aria-hidden="true">account_balance_wallet</span></div>
+        <h3>Open Account &amp; Start Banking</h3>
+        <p>Choose Savings or Current, add a nominee, and begin transacting.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ TESTIMONIALS ═══════ -->
+<section class="testimonials" id="testimonials">
+  <div class="section-inner">
+    <div class="section-badge" data-reveal>TESTIMONIALS</div>
+    <h2 class="section-title" data-reveal>Loved by <span class="gradient-text">Thousands</span></h2>
+    <div class="testimonials-grid">
+      <article class="testimonial-card" data-reveal>
+        <div class="quote-mark" aria-hidden="true">"</div>
+        <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+        <p>NeoBank360 has completely changed how I manage my finances. The dashboard is incredibly intuitive!</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">RS</div>
+          <div><strong>Rahul Sharma</strong><span>Software Engineer</span></div>
+        </div>
+      </article>
+      <article class="testimonial-card featured" data-reveal>
+        <div class="quote-mark" aria-hidden="true">"</div>
+        <div class="featured-badge">★ Featured</div>
+        <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+        <p>The fund transfer feature is blazing fast. I switched from my traditional bank and never looked back.</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">PK</div>
+          <div><strong>Priya Kapoor</strong><span>Business Owner</span></div>
+        </div>
+      </article>
+      <article class="testimonial-card" data-reveal>
+        <div class="quote-mark" aria-hidden="true">"</div>
+        <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+        <p>As an admin, the monitoring tools are exceptional. I can oversee all accounts effortlessly.</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">AM</div>
+          <div><strong>Amit Mehta</strong><span>Bank Manager</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CTA ═══════ -->
+<section class="cta-section">
+  <div class="cta-bg" aria-hidden="true">
+    <span class="cta-float f1"></span>
+    <span class="cta-float f2"></span>
+    <span class="cta-float f3"></span>
+  </div>
+  <div class="cta-inner" data-reveal>
+    <span class="cta-eyebrow">START IN UNDER A MINUTE</span>
+    <h2>Ready to Experience the Future of Banking?</h2>
+    <p>Join 1,00,000+ users who trust NeoBank360 for their finances</p>
+    <div class="cta-actions">
+      <a routerLink="/register" class="btn-cta primary">
+        <span class="material-icons-outlined" aria-hidden="true">rocket_launch</span> Create Free Account
+      </a>
+      <a routerLink="/login" class="btn-cta secondary">
+        <span class="material-icons-outlined" aria-hidden="true">login</span> Sign In
+      </a>
+    </div>
+    <p class="cta-fineprint">
+      <span class="material-icons-outlined" aria-hidden="true">check_circle</span>
+      No hidden fees · Cancel anytime · Bank-grade security
+    </p>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <span class="material-icons-outlined" aria-hidden="true">account_balance</span>
+        <span>NeoBank360</span>
+      </div>
+      <p>Secure · Reliable · Modern Digital Banking</p>
+      <div class="footer-socials" aria-label="Social links">
+        <a href="#" aria-label="Twitter"><span class="material-icons-outlined">alternate_email</span></a>
+        <a href="#" aria-label="Email"><span class="material-icons-outlined">mail</span></a>
+        <a href="#" aria-label="LinkedIn"><span class="material-icons-outlined">business_center</span></a>
+        <a href="#" aria-label="Help center"><span class="material-icons-outlined">help_outline</span></a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <div>
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#security">Security</a>
+        <a href="#testimonials">Reviews</a>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <a routerLink="/login">Sign In</a>
+        <a routerLink="/register">Register</a>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© {{ year }} NeoBank360. All rights reserved. Built with care in India.</p>
+  </div>
+</footer>

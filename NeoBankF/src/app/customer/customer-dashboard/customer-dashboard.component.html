@@ -1,0 +1,580 @@
+<div class="dash-page">
+
+  <header class="dash-header">
+    <div>
+      <h1 class="page-title">
+        {{ activeTab === 'dashboard' ? 'Dashboard' :
+           activeTab === 'account' ? 'My Accounts' : 'My Profile' }}
+      </h1>
+      <span class="page-date">{{ currentDate | date:'EEEE, MMMM d, y' }}</span>
+    </div>
+    <div class="user-info">
+      <div class="user-avatar">
+        <img *ngIf="profilePhoto" [src]="profilePhoto" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+        <span *ngIf="!profilePhoto">{{ userInitials }}</span>
+      </div>
+      <div class="user-details">
+        <span class="user-name">{{ userName }}</span>
+        <span class="user-role">Customer</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- KYC Gate Banner -->
+  <div class="kyc-banner" *ngIf="user && !isKycComplete">
+    <span class="material-icons-outlined kyc-banner-ic">verified_user</span>
+    <div class="kyc-banner-body">
+      <strong>Complete your KYC verification</strong>
+      <p>Submit Aadhaar, PAN and Date of Birth to unlock new account opening, higher transaction limits and loan facilities.</p>
+    </div>
+    <a routerLink="/user/profile" class="kyc-banner-btn">
+      <span class="material-icons-outlined">arrow_forward</span> Complete KYC
+    </a>
+  </div>
+
+  <!-- Apply-for-Loan hero CTA -->
+  <a routerLink="/loans/apply" class="loan-hero">
+    <div class="loan-hero-icon">
+      <span class="material-icons-outlined">request_quote</span>
+    </div>
+    <div class="loan-hero-text">
+      <h3>Need funds? Apply for a loan in minutes</h3>
+      <p>Personal, Home, Education & Vehicle loans &mdash; instant EMI preview, one-tap submit.</p>
+    </div>
+    <span class="loan-hero-cta">
+      Apply Now <span class="material-icons-outlined">arrow_forward</span>
+    </span>
+  </a>
+
+  <nav class="dash-tabs" role="tablist">
+    <button role="tab" [class.active]="activeTab === 'dashboard'" (click)="switchTab('dashboard')">
+      <span class="material-icons-outlined">dashboard</span><span>Dashboard</span>
+    </button>
+    <button role="tab" [class.active]="activeTab === 'account'" (click)="switchTab('account')">
+      <span class="material-icons-outlined">account_balance_wallet</span><span>My Accounts</span>
+    </button>
+    <button role="tab" [class.active]="activeTab === 'profile'" (click)="switchTab('profile')">
+      <span class="material-icons-outlined">person</span><span>Profile</span>
+    </button>
+  </nav>
+
+    <div class="content-area">
+      <!-- Global Messages -->
+      <div class="msg success" *ngIf="successMessage">
+        <span class="material-icons-outlined">check_circle</span> {{ successMessage }}
+      </div>
+      <div class="msg error" *ngIf="errorMessage">
+        <span class="material-icons-outlined">error</span> {{ errorMessage }}
+      </div>
+
+      <!-- ------- DASHBOARD TAB ------- -->
+      <div *ngIf="activeTab === 'dashboard'" class="tab-content animate-in">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card primary-card">
+            <div class="card-icon"><span class="material-icons-outlined">account_balance_wallet</span></div>
+            <div class="card-info">
+              <span class="card-label">Total Balance</span>
+              <span class="card-value">Rs. {{ totalBalance | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon green"><span class="material-icons-outlined">credit_card</span></div>
+            <div class="card-info">
+              <span class="card-label">Active Accounts</span>
+              <span class="card-value">{{ activeAccounts }}</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="card-icon orange"><span class="material-icons-outlined">trending_up</span></div>
+            <div class="card-info">
+              <span class="card-label">Total Accounts</span>
+              <span class="card-value">{{ accounts.length }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overdue Alert -->
+        <div class="alert-banner" *ngIf="overdueBillsCount > 0">
+          <span class="material-icons-outlined">notification_important</span>
+          <div>
+            <strong>{{ overdueBillsCount }} bill(s) overdue!</strong>
+            <p style="margin:4px 0 0;font-size:13px">Go to Bill Dashboard to pay immediately.</p>
+          </div>
+          <a routerLink="/bills" class="alert-btn">Pay Now</a>
+        </div>
+
+        <!-- Navigation Cards -->
+        <h3 class="section-label">Quick Navigation</h3>
+        <div class="nav-cards">
+          <a routerLink="/transactions" class="nav-card">
+            <div class="nav-card-icon tx-icon"><span class="material-icons-outlined">swap_horiz</span></div>
+            <div class="nav-card-info">
+              <h4>Transaction Dashboard</h4>
+              <p>View all transactions, make deposits, withdrawals, fund transfers, and see analytics</p>
+            </div>
+            <span class="material-icons-outlined nav-arrow">arrow_forward</span>
+          </a>
+          <a routerLink="/bills" class="nav-card">
+            <div class="nav-card-icon bill-icon"><span class="material-icons-outlined">receipt_long</span></div>
+            <div class="nav-card-info">
+              <h4>Bill Dashboard</h4>
+              <p>Create bills, pay bills, manage auto-pay, view bill analytics and categories</p>
+            </div>
+            <span class="material-icons-outlined nav-arrow">arrow_forward</span>
+          </a>
+          <a routerLink="/analytics" class="nav-card">
+            <div class="nav-card-icon analytics-icon"><span class="material-icons-outlined">analytics</span></div>
+            <div class="nav-card-info">
+              <h4>Analytics Overview</h4>
+              <p>Quick overview of your accounts, bills summary and navigation hub</p>
+            </div>
+            <span class="material-icons-outlined nav-arrow">arrow_forward</span>
+          </a>
+          <a routerLink="/budget" class="nav-card">
+            <div class="nav-card-icon budget-icon"><span class="material-icons-outlined">savings</span></div>
+            <div class="nav-card-info">
+              <h4>Budget Manager</h4>
+              <p>Set spending limits, track category budgets, get real-time alerts</p>
+            </div>
+            <span class="material-icons-outlined nav-arrow">arrow_forward</span>
+          </a>
+          <a routerLink="/rewards" class="nav-card">
+            <div class="nav-card-icon rewards-icon"><span class="material-icons-outlined">emoji_events</span></div>
+            <div class="nav-card-info">
+              <h4>Rewards Center</h4>
+              <p>Earn points on transactions, unlock tiers, redeem cashback & vouchers</p>
+            </div>
+            <span class="material-icons-outlined nav-arrow">arrow_forward</span>
+          </a>
+          <a routerLink="/loans/dashboard" class="nav-card">
+            <div class="nav-card-icon" style="background:#e8f4fd;color:#1976d2"><span class="material-icons-outlined">account_balance</span></div>
+            <div class="nav-card-info">
+              <h4>Loan & EMI Dashboard</h4>
+              <p>View active loans, upcoming EMIs, repayment progress and apply for new loans</p>
+            </div>
+            <span class="material-icons-outlined nav-arrow">arrow_forward</span>
+          </a>
+        </div>
+
+        <!-- Quick Actions -->
+        <h3 class="section-label">Quick Actions</h3>
+        <div class="quick-actions">
+          <div class="action-card" (click)="switchTab('account')">
+            <span class="material-icons-outlined">add_card</span>
+            <span>Open Account</span>
+          </div>
+          <a class="action-card" routerLink="/transactions" style="text-decoration:none">
+            <span class="material-icons-outlined">payments</span>
+            <span>Deposit / Withdraw</span>
+          </a>
+          <a class="action-card" routerLink="/transactions" style="text-decoration:none">
+            <span class="material-icons-outlined">send</span>
+            <span>Fund Transfer</span>
+          </a>
+          <a class="action-card" routerLink="/bills" style="text-decoration:none">
+            <span class="material-icons-outlined">receipt_long</span>
+            <span>Pay Bills</span>
+          </a>
+          <div class="action-card" (click)="switchTab('profile')">
+            <span class="material-icons-outlined">manage_accounts</span>
+            <span>My Profile</span>
+          </div>
+        </div>
+
+        <!-- Account Overview -->
+        <div class="panel" *ngIf="accounts.length > 0">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">credit_card</span> Account Overview</h3>
+          </div>
+          <div class="accounts-grid">
+            <div class="acc-card" *ngFor="let acc of accounts"
+              [class.frozen]="acc.status === 'FROZEN'" [class.closed]="acc.status === 'CLOSED'">
+              <div class="acc-top">
+                <span class="acc-type-badge" [class.savings]="acc.accountType === 'SAVINGS'" [class.current]="acc.accountType === 'CURRENT'">
+                  {{ acc.accountType }}
+                </span>
+                <span class="acc-status-dot" [class.active]="acc.status === 'ACTIVE' || !acc.status"
+                  [class.frozen-dot]="acc.status === 'FROZEN'" [class.closed-dot]="acc.status === 'CLOSED'"></span>
+              </div>
+              <p class="acc-number">{{ acc.maskedAccountNumber }}</p>
+              <p class="acc-balance">Rs. {{ acc.balance | number:'1.2-2' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------- ACCOUNTS TAB ------- -->
+      <div *ngIf="activeTab === 'account'" class="tab-content animate-in">
+        <!-- Open New Account -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">add_card</span> Open New Account</h3>
+            <button class="toggle-btn" (click)="toggleAccountForm()">
+              <span class="material-icons-outlined">{{ showAccountForm ? 'close' : 'add' }}</span>
+              {{ showAccountForm ? 'Close' : 'New Account' }}
+            </button>
+          </div>
+
+          <form class="form-grid" *ngIf="showAccountForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Account Type</label>
+                <select [(ngModel)]="accountForm.accountType" name="type">
+                  <option value="SAVINGS">Savings Account</option>
+                  <option value="CURRENT">Current Account</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Initial Deposit (Rs.)</label>
+                <input type="number" min="500" [(ngModel)]="accountForm.initialDeposit" name="deposit" placeholder="Min Rs.500" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Account Purpose</label>
+                <input type="text" [(ngModel)]="accountForm.purpose" name="purpose" placeholder="Salary / Business / Personal" />
+              </div>
+              <div class="form-group">
+                <label>Communication</label>
+                <select [(ngModel)]="accountForm.communicationMode" name="comm">
+                  <option value="EMAIL">Email</option>
+                  <option value="SMS">SMS</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nominee Name</label>
+                <input type="text" [(ngModel)]="accountForm.nomineeName" name="nominee" placeholder="Nominee name" />
+              </div>
+              <div class="form-group">
+                <label>Nominee Relationship</label>
+                <input type="text" [(ngModel)]="accountForm.nomineeRelation" name="relation" placeholder="Father / Mother / Spouse" />
+              </div>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" [(ngModel)]="accountForm.acceptedTerms" name="terms" id="terms" />
+              <label for="terms">I agree to the terms & conditions of NeoBank360</label>
+            </div>
+            <button class="primary-btn" type="button" (click)="createAccount()">
+              <span class="material-icons-outlined">add_card</span> Open Account
+            </button>
+          </form>
+        </div>
+
+        <!-- Newly Created -->
+        <div class="panel success-panel" *ngIf="newlyCreatedAccount">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">celebration</span> Account Created!</h3>
+            <button class="icon-btn" (click)="newlyCreatedAccount = null">
+              <span class="material-icons-outlined">close</span>
+            </button>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Account Number</span>
+              <span class="detail-value mono">{{ newlyCreatedAccount.maskedAccountNumber }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Type</span>
+              <span class="detail-value">{{ newlyCreatedAccount.accountType }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Balance</span>
+              <span class="detail-value green">Rs. {{ newlyCreatedAccount.balance }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Status</span>
+              <span class="status-badge active">ACTIVE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- My Accounts -->
+        <div class="panel" *ngIf="accounts.length > 0">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">credit_card</span> My Accounts</h3>
+          </div>
+          <div class="accounts-grid">
+            <div class="acc-card" *ngFor="let acc of accounts"
+              [class.frozen]="acc.status === 'FROZEN'" [class.closed]="acc.status === 'CLOSED'">
+              <div class="acc-top">
+                <span class="acc-type-badge" [class.savings]="acc.accountType === 'SAVINGS'" [class.current]="acc.accountType === 'CURRENT'">
+                  <span class="material-icons-outlined">{{ acc.accountType === 'SAVINGS' ? 'savings' : 'account_balance_wallet' }}</span>
+                  {{ acc.accountType }}
+                </span>
+                <span class="status-badge"
+                  [class.active]="acc.status === 'ACTIVE' || !acc.status"
+                  [class.frozen-badge]="acc.status === 'FROZEN'"
+                  [class.closed-badge]="acc.status === 'CLOSED'">
+                  {{ acc.status || 'ACTIVE' }}
+                </span>
+              </div>
+              <p class="acc-number">{{ acc.maskedAccountNumber }}</p>
+              <p class="acc-balance">Rs. {{ acc.balance | number:'1.2-2' }}</p>
+              <div class="acc-actions">
+                <button class="action-btn freeze" *ngIf="acc.status === 'ACTIVE'" (click)="freezeAccount(acc.id)" title="Freeze">
+                  <span class="material-icons-outlined">ac_unit</span>
+                </button>
+                <button class="action-btn activate" *ngIf="acc.status === 'FROZEN'" (click)="activateAccount(acc.id)" title="Activate">
+                  <span class="material-icons-outlined">check_circle</span>
+                </button>
+                <button class="action-btn close-acc" *ngIf="acc.status === 'ACTIVE' || acc.status === 'FROZEN'" (click)="closeAccount(acc.id)" title="Request Closure">
+                  <span class="material-icons-outlined">cancel</span>
+                </button>
+                <span class="pending-badge" *ngIf="acc.status === 'PENDING_CLOSURE'">
+                  <span class="material-icons-outlined">hourglass_top</span> Pending Closure
+                </span>
+                <button class="action-btn chart" (click)="loadBalanceChart(acc.id)" title="Balance Chart">
+                  <span class="material-icons-outlined">show_chart</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Balance Chart -->
+        <div class="panel" *ngIf="chartAccountId">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">show_chart</span> Balance Trend</h3>
+            <button class="icon-btn" (click)="chartAccountId = null"><span class="material-icons-outlined">close</span></button>
+          </div>
+          <div class="chart-wrap"><canvas id="balanceChart" height="100"></canvas></div>
+        </div>
+
+        <!-- Statement Download -->
+        <div class="panel" *ngIf="accounts.length > 0">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">description</span> Monthly Statement</h3>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Account</label>
+              <select [(ngModel)]="statementAccountId" name="stmtAcc">
+                <option [ngValue]="null">Select Account</option>
+                <option *ngFor="let acc of accounts" [ngValue]="acc.id">{{ acc.maskedAccountNumber }} ({{ acc.accountType }})</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Month</label>
+              <select [(ngModel)]="statementMonth" name="stmtMonth">
+                <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [ngValue]="m">{{ m }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Year</label>
+              <input type="number" [(ngModel)]="statementYear" name="stmtYear" min="2020" />
+            </div>
+          </div>
+          <button class="primary-btn" (click)="downloadStatement()" [disabled]="statementLoading">
+            <span class="material-icons-outlined">download</span>
+            {{ statementLoading ? 'Downloading...' : 'Download PDF' }}
+          </button>
+        </div>
+
+        <div class="empty-state" *ngIf="accounts.length === 0 && !showAccountForm">
+          <span class="material-icons-outlined empty-icon">account_balance_wallet</span>
+          <h4>No Accounts Yet</h4>
+          <p>Click "New Account" to open your first bank account.</p>
+        </div>
+      </div>
+
+      <!-- ------- PROFILE TAB ------- -->
+      <div *ngIf="activeTab === 'profile'" class="tab-content animate-in">
+        <div class="panel" *ngIf="user">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">person</span> Personal Information</h3>
+            <button class="toggle-btn" *ngIf="!editMode" (click)="enableEdit()">
+              <span class="material-icons-outlined">edit</span> Edit
+            </button>
+            <div class="btn-group" *ngIf="editMode">
+              <button class="save-btn" (click)="saveProfile()">
+                <span class="material-icons-outlined">save</span> Save
+              </button>
+              <button class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+            </div>
+          </div>
+
+          <div class="profile-header">
+            <div class="profile-avatar large" style="position:relative;overflow:visible;">
+              <img *ngIf="profilePhoto" [src]="profilePhoto" alt="Profile photo"
+                style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+              <span *ngIf="!profilePhoto">{{ userInitials }}</span>
+
+              <!-- Photo upload trigger -->
+              <button type="button" class="avatar-photo-btn" (click)="triggerPhotoSelect()"
+                title="Change photo" [disabled]="photoUploading">
+                <span class="material-icons-outlined">{{ photoUploading ? 'hourglass_top' : 'photo_camera' }}</span>
+              </button>
+              <input #photoInput type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+            </div>
+            <div>
+              <h2 class="profile-name">{{ user.fullName }}</h2>
+              <span class="role-pill">{{ user.role }}</span>
+              <span class="member-since">Member since {{ user.createdAt | date:'MMM y' }}</span>
+              <div *ngIf="profilePhoto" style="margin-top:10px;">
+                <button type="button" class="link-remove-photo" (click)="removePhoto()">
+                  <span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;">delete</span>
+                  Remove photo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-grid profile-details">
+            <div class="detail-item">
+              <span class="detail-label">Full Name</span>
+              <input *ngIf="editMode" type="text" [(ngModel)]="user.fullName" name="fullName" class="inline-edit" />
+              <span *ngIf="!editMode" class="detail-value">{{ user.fullName }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Email Address</span>
+              <span class="detail-value">{{ user.email }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Role</span>
+              <span class="detail-value">{{ user.role }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Member Since</span>
+              <span class="detail-value">{{ user.createdAt | date:'mediumDate' }}</span>
+            </div>
+          </div>
+
+          <div class="msg success" *ngIf="profileSuccess"><span class="material-icons-outlined">check_circle</span> {{ profileSuccess }}</div>
+          <div class="msg error" *ngIf="profileError"><span class="material-icons-outlined">error</span> {{ profileError }}</div>
+        </div>
+
+        <!-- Account Summary -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">assessment</span> Account Summary</h3>
+          </div>
+          <div class="profile-stats">
+            <div class="profile-stat-card">
+              <span class="material-icons-outlined" style="color:#1976d2;font-size:28px">account_balance_wallet</span>
+              <span class="stat-number">{{ accounts.length }}</span>
+              <span class="stat-desc">Total Accounts</span>
+            </div>
+            <div class="profile-stat-card">
+              <span class="material-icons-outlined" style="color:#22c55e;font-size:28px">check_circle</span>
+              <span class="stat-number">{{ activeAccounts }}</span>
+              <span class="stat-desc">Active Accounts</span>
+            </div>
+            <div class="profile-stat-card">
+              <span class="material-icons-outlined" style="color:#e65100;font-size:28px">account_balance</span>
+              <span class="stat-number">Rs.{{ totalBalance | number:'1.0-0' }}</span>
+              <span class="stat-desc">Total Balance</span>
+            </div>
+            <div class="profile-stat-card">
+              <span class="material-icons-outlined" style="color:#7b1fa2;font-size:28px">calendar_today</span>
+              <span class="stat-number">{{ user.createdAt | date:'y' }}</span>
+              <span class="stat-desc">Year Joined</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Linked Accounts -->
+        <div class="panel" *ngIf="accounts.length > 0">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">link</span> Linked Accounts</h3>
+          </div>
+          <div class="accounts-grid">
+            <div class="acc-card" *ngFor="let acc of accounts">
+              <div class="acc-top">
+                <span class="acc-type-badge" [class.savings]="acc.accountType === 'SAVINGS'" [class.current]="acc.accountType === 'CURRENT'">
+                  {{ acc.accountType }}
+                </span>
+                <span class="status-badge"
+                  [class.active]="acc.status === 'ACTIVE' || !acc.status"
+                  [class.frozen-badge]="acc.status === 'FROZEN'"
+                  [class.closed-badge]="acc.status === 'CLOSED'">
+                  {{ acc.status || 'ACTIVE' }}
+                </span>
+              </div>
+              <p class="acc-number">{{ acc.maskedAccountNumber }}</p>
+              <p class="acc-balance">Rs. {{ acc.balance | number:'1.2-2' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security & Preferences -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">security</span> Security Settings</h3>
+          </div>
+          <div class="security-grid">
+            <div class="security-item">
+              <div class="security-left">
+                <span class="material-icons-outlined security-icon" style="color:#22c55e">verified_user</span>
+                <div>
+                  <h4>Two-Factor Authentication</h4>
+                  <p>OTP verification enabled for sensitive operations</p>
+                </div>
+              </div>
+              <span class="security-status enabled">Enabled</span>
+            </div>
+            <div class="security-item">
+              <div class="security-left">
+                <span class="material-icons-outlined security-icon" style="color:#1976d2">lock</span>
+                <div>
+                  <h4>Password</h4>
+                  <p>Last changed {{ user.createdAt | date:'mediumDate' }}</p>
+                </div>
+              </div>
+              <span class="security-status">Active</span>
+            </div>
+            <div class="security-item">
+              <div class="security-left">
+                <span class="material-icons-outlined security-icon" style="color:#e65100">notifications</span>
+                <div>
+                  <h4>Login Notifications</h4>
+                  <p>Get notified on every new login</p>
+                </div>
+              </div>
+              <span class="security-status enabled">Enabled</span>
+            </div>
+            <div class="security-item">
+              <div class="security-left">
+                <span class="material-icons-outlined security-icon" style="color:#7b1fa2">devices</span>
+                <div>
+                  <h4>Active Sessions</h4>
+                  <p>Currently logged in on this device</p>
+                </div>
+              </div>
+              <span class="security-status">1 Device</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3><span class="material-icons-outlined">apps</span> Quick Links</h3>
+          </div>
+          <div class="quick-links-grid">
+            <a routerLink="/transactions" class="quick-link">
+              <span class="material-icons-outlined">swap_horiz</span>
+              <span>Transactions</span>
+            </a>
+            <a routerLink="/bills" class="quick-link">
+              <span class="material-icons-outlined">receipt_long</span>
+              <span>Bills</span>
+            </a>
+            <a routerLink="/budget" class="quick-link">
+              <span class="material-icons-outlined">savings</span>
+              <span>Budget</span>
+            </a>
+            <a routerLink="/rewards" class="quick-link">
+              <span class="material-icons-outlined">emoji_events</span>
+              <span>Rewards</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+</div>
+
+<!-- OTP modal removed — account closure no longer requires OTP -->

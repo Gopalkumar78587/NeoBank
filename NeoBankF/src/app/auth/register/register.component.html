@@ -1,0 +1,300 @@
+<div class="page">
+  <div class="left-panel">
+    <div class="left-content">
+      <a routerLink="/" class="back-link">
+        <span class="material-icons-outlined">arrow_back</span> Back to Home
+      </a>
+      <div class="brand">
+        <span class="material-icons-outlined brand-icon">account_balance</span>
+        <h1>Neo<span>Bank</span>360</h1>
+      </div>
+      <p class="tagline">Open your digital bank account<br>in just a few minutes</p>
+      <div class="features-list">
+        <div class="feat"><span class="material-icons-outlined">verified_user</span> Aadhaar + PAN eKYC verified</div>
+        <div class="feat"><span class="material-icons-outlined">credit_card</span> Instant Savings / Current account</div>
+        <div class="feat"><span class="material-icons-outlined">lock</span> 256-bit encryption · RBI compliant</div>
+        <div class="feat"><span class="material-icons-outlined">support_agent</span> 24×7 customer support</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="card">
+      <div class="card-header">
+        <h2>Create Your Account</h2>
+        <p>Step {{ currentStep }} of {{ totalSteps }} — takes about 3 minutes</p>
+      </div>
+
+      <!-- Step indicator -->
+      <div class="step-indicator">
+        <div class="step" [class.active]="currentStep >= 1" [class.done]="currentStep > 1">
+          <div class="step-dot">{{ currentStep > 1 ? '✓' : '1' }}</div>
+          <span>Identity</span>
+        </div>
+        <div class="step-line" [class.active]="currentStep > 1"></div>
+        <div class="step" [class.active]="currentStep >= 2" [class.done]="currentStep > 2">
+          <div class="step-dot">{{ currentStep > 2 ? '✓' : '2' }}</div>
+          <span>KYC</span>
+        </div>
+        <div class="step-line" [class.active]="currentStep > 2"></div>
+        <div class="step" [class.active]="currentStep >= 3" [class.done]="currentStep > 3">
+          <div class="step-dot">{{ currentStep > 3 ? '✓' : '3' }}</div>
+          <span>Address</span>
+        </div>
+        <div class="step-line" [class.active]="currentStep > 3"></div>
+        <div class="step" [class.active]="currentStep >= 4">
+          <div class="step-dot">4</div>
+          <span>Secure</span>
+        </div>
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+        <!-- STEP 1 — Identity -->
+        <div *ngIf="currentStep === 1" class="step-content">
+          <div class="field">
+            <label><span class="material-icons-outlined">person</span> Full Name (as per PAN)</label>
+            <input type="text" formControlName="fullName" placeholder="e.g. Rahul Kumar Sharma" autocomplete="name"
+              [class.invalid]="registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid" />
+            <span class="field-error" *ngIf="registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid">
+              Please enter your full legal name
+            </span>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-outlined">mail</span> Email Address</label>
+            <input type="email" formControlName="email" placeholder="name@example.com" autocomplete="email"
+              [class.invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" />
+            <span class="field-error" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+              Enter a valid email address
+            </span>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-outlined">smartphone</span> Mobile Number</label>
+            <input type="tel" formControlName="phone" placeholder="10-digit mobile number" maxlength="10" autocomplete="tel"
+              [class.invalid]="registerForm.get('phone')?.touched && registerForm.get('phone')?.invalid" />
+            <span class="field-error" *ngIf="registerForm.get('phone')?.touched && registerForm.get('phone')?.invalid">
+              Enter a valid Indian mobile number (starts with 6–9)
+            </span>
+          </div>
+
+          <button type="button" class="next-btn" (click)="nextStep()" [disabled]="!isStep1Valid()">
+            Continue to KYC <span class="material-icons-outlined">arrow_forward</span>
+          </button>
+        </div>
+
+        <!-- STEP 2 — KYC -->
+        <div *ngIf="currentStep === 2" class="step-content">
+          <div class="row-2">
+            <div class="field">
+              <label><span class="material-icons-outlined">cake</span> Date of Birth</label>
+              <input type="date" formControlName="dateOfBirth" [min]="minDob" [max]="maxDob"
+                [class.invalid]="registerForm.get('dateOfBirth')?.touched && registerForm.get('dateOfBirth')?.invalid" />
+              <span class="field-error" *ngIf="registerForm.get('dateOfBirth')?.touched && registerForm.get('dateOfBirth')?.invalid">
+                Must be 18 years or older
+              </span>
+            </div>
+
+            <div class="field">
+              <label><span class="material-icons-outlined">wc</span> Gender</label>
+              <select formControlName="gender"
+                [class.invalid]="registerForm.get('gender')?.touched && registerForm.get('gender')?.invalid">
+                <option value="">Select gender</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-outlined">badge</span> Aadhaar Number</label>
+            <input type="text" formControlName="aadhaar" placeholder="12-digit Aadhaar" inputmode="numeric"
+              maxlength="12" (input)="onAadhaarInput($event)"
+              [class.invalid]="registerForm.get('aadhaar')?.touched && registerForm.get('aadhaar')?.invalid" />
+            <span class="field-help">Encrypted and used only for KYC verification.</span>
+            <span class="field-error" *ngIf="registerForm.get('aadhaar')?.touched && registerForm.get('aadhaar')?.invalid">
+              Enter all 12 digits of your Aadhaar
+            </span>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-outlined">contact_page</span> PAN Number</label>
+            <input type="text" formControlName="pan" placeholder="ABCDE1234F" maxlength="10"
+              (input)="onPanInput($event)" style="text-transform: uppercase"
+              [class.invalid]="registerForm.get('pan')?.touched && registerForm.get('pan')?.invalid" />
+            <span class="field-error" *ngIf="registerForm.get('pan')?.touched && registerForm.get('pan')?.invalid">
+              Format: 5 letters + 4 digits + 1 letter (e.g. ABCDE1234F)
+            </span>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label><span class="material-icons-outlined">work</span> Occupation</label>
+              <select formControlName="occupation"
+                [class.invalid]="registerForm.get('occupation')?.touched && registerForm.get('occupation')?.invalid">
+                <option value="">Select occupation</option>
+                <option value="Salaried">Salaried</option>
+                <option value="Self-Employed">Self-Employed</option>
+                <option value="Business Owner">Business Owner</option>
+                <option value="Student">Student</option>
+                <option value="Homemaker">Homemaker</option>
+                <option value="Retired">Retired</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label><span class="material-icons-outlined">currency_rupee</span> Annual Income (₹)</label>
+              <input type="number" formControlName="annualIncome" placeholder="e.g. 500000" min="0"
+                [class.invalid]="registerForm.get('annualIncome')?.touched && registerForm.get('annualIncome')?.invalid" />
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="back-btn" (click)="prevStep()">
+              <span class="material-icons-outlined">arrow_back</span> Back
+            </button>
+            <button type="button" class="next-btn" (click)="nextStep()" [disabled]="!isStep2Valid()">
+              Continue <span class="material-icons-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3 — Address -->
+        <div *ngIf="currentStep === 3" class="step-content">
+          <div class="field">
+            <label><span class="material-icons-outlined">home</span> Address Line</label>
+            <input type="text" formControlName="addressLine" placeholder="House / Flat / Street" autocomplete="street-address"
+              [class.invalid]="registerForm.get('addressLine')?.touched && registerForm.get('addressLine')?.invalid" />
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label><span class="material-icons-outlined">location_city</span> City</label>
+              <input type="text" formControlName="city" placeholder="e.g. Bengaluru" autocomplete="address-level2"
+                [class.invalid]="registerForm.get('city')?.touched && registerForm.get('city')?.invalid" />
+            </div>
+            <div class="field">
+              <label><span class="material-icons-outlined">map</span> State</label>
+              <input type="text" formControlName="state" placeholder="e.g. Karnataka" autocomplete="address-level1"
+                [class.invalid]="registerForm.get('state')?.touched && registerForm.get('state')?.invalid" />
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label><span class="material-icons-outlined">pin_drop</span> Pincode</label>
+              <input type="text" formControlName="pincode" placeholder="6-digit pincode" maxlength="6" inputmode="numeric"
+                autocomplete="postal-code"
+                [class.invalid]="registerForm.get('pincode')?.touched && registerForm.get('pincode')?.invalid" />
+              <span class="field-error" *ngIf="registerForm.get('pincode')?.touched && registerForm.get('pincode')?.invalid">
+                Enter a valid 6-digit pincode
+              </span>
+            </div>
+            <div class="field">
+              <label><span class="material-icons-outlined">public</span> Country</label>
+              <input type="text" formControlName="country" autocomplete="country-name" />
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="back-btn" (click)="prevStep()">
+              <span class="material-icons-outlined">arrow_back</span> Back
+            </button>
+            <button type="button" class="next-btn" (click)="nextStep()" [disabled]="!isStep3Valid()">
+              Continue <span class="material-icons-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4 — Security -->
+        <div *ngIf="currentStep === 4" class="step-content">
+          <div class="field">
+            <label><span class="material-icons-outlined">lock</span> Password</label>
+            <div class="password-wrap">
+              <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                placeholder="Min 8 characters" autocomplete="new-password"
+                [class.invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" />
+              <button type="button" class="eye-btn" (click)="showPassword = !showPassword">
+                <span class="material-icons-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+            <div class="strength-bar" *ngIf="registerForm.get('password')?.value">
+              <div class="strength-fill" [style.width.%]="passwordStrength * 25" [style.background]="strengthColor"></div>
+            </div>
+            <span class="strength-label" *ngIf="registerForm.get('password')?.value" [style.color]="strengthColor">
+              {{ strengthLabel }}
+            </span>
+            <span class="field-error" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+              Must be 8+ chars with uppercase, lowercase, number &amp; special character (&#64;$!%*?&amp;)
+            </span>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-outlined">lock</span> Confirm Password</label>
+            <div class="password-wrap">
+              <input [type]="showConfirm ? 'text' : 'password'" formControlName="confirmPassword"
+                placeholder="Re-enter your password" autocomplete="new-password" />
+              <button type="button" class="eye-btn" (click)="showConfirm = !showConfirm">
+                <span class="material-icons-outlined">{{ showConfirm ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+            <span class="field-error" *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched">
+              Passwords do not match
+            </span>
+          </div>
+
+          <label class="terms-check">
+            <input type="checkbox" formControlName="acceptTerms" />
+            <span>I agree to the <a href="#" target="_blank">Terms of Service</a>, <a href="#" target="_blank">Privacy Policy</a> and authorise NeoBank360 to perform Aadhaar/PAN-based KYC verification.</span>
+          </label>
+
+          <div class="field captcha-field">
+            <label><span class="material-icons-outlined">security</span> Security Check</label>
+            <div class="captcha-box">
+              <div class="captcha-question">
+                <span class="captcha-num">{{ captchaA }}</span>
+                <span class="captcha-op">+</span>
+                <span class="captcha-num">{{ captchaB }}</span>
+                <span class="captcha-op">=</span>
+                <input type="number" [(ngModel)]="captchaInput" [ngModelOptions]="{standalone: true}"
+                       placeholder="?" class="captcha-input" />
+              </div>
+              <button type="button" class="captcha-refresh" (click)="refreshCaptcha()" title="Refresh">
+                <span class="material-icons-outlined">refresh</span>
+              </button>
+            </div>
+            <span class="field-error" *ngIf="captchaError">Incorrect answer. Please try again.</span>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="back-btn" (click)="prevStep()">
+              <span class="material-icons-outlined">arrow_back</span> Back
+            </button>
+            <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || loading || !captchaInput">
+              <span class="spinner" *ngIf="loading"></span>
+              <span class="material-icons-outlined" *ngIf="!loading">how_to_reg</span>
+              {{ loading ? 'Creating account...' : 'Create Account' }}
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div class="success-banner" *ngIf="successMessage">
+        <span class="material-icons-outlined">check_circle</span>
+        {{ successMessage }}
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="material-icons-outlined">error_outline</span>
+        {{ errorMessage }}
+      </div>
+
+      <p class="footer-text">
+        Already have an account? <a routerLink="/login">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>

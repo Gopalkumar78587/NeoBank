@@ -1,0 +1,81 @@
+<div class="admin-container">
+  <div class="page-header">
+    <h2>Loan Applications</h2>
+    <div class="filter-row">
+      <label>Filter:</label>
+      <select class="filter-select" [(ngModel)]="filterStatus" (change)="applyFilter()">
+        <option value="ALL">All</option>
+        <option value="PENDING">Pending</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="success" class="alert success">{{ success }}</div>
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+  <div *ngIf="loading" class="loading">Loading applications...</div>
+  <div *ngIf="!loading && filtered.length === 0" class="no-data">No applications found.</div>
+
+  <table class="data-table" *ngIf="!loading && filtered.length > 0">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Applicant</th>
+        <th>Email</th>
+        <th>Product</th>
+        <th>Amount</th>
+        <th>Tenure</th>
+        <th>Status</th>
+        <th>Applied</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let app of filtered">
+        <td>{{ app.id }}</td>
+        <td>{{ app.applicantName }}</td>
+        <td>{{ app.applicantEmail }}</td>
+        <td>{{ app.productName }}</td>
+        <td>₹{{ app.requestedAmount | number:'1.0-0' }}</td>
+        <td>{{ app.requestedTenureMonths }} mo</td>
+        <td><span [class]="statusClass(app.status)" class="badge">{{ app.status }}</span></td>
+        <td>{{ app.appliedAt | date:'dd MMM yyyy' }}</td>
+        <td>
+          <button *ngIf="app.status === 'PENDING'" class="btn-decide" (click)="openDecision(app)">Decide</button>
+          <span *ngIf="app.status !== 'PENDING'" class="decided-text">{{ app.adminRemarks || '—' }}</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Decision Modal -->
+<div class="modal-overlay" *ngIf="selectedApp" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>Review Application #{{ selectedApp.id }}</h3>
+    <div class="review-info">
+      <p><strong>Applicant:</strong> {{ selectedApp.applicantName }} ({{ selectedApp.applicantEmail }})</p>
+      <p><strong>Product:</strong> {{ selectedApp.productName }}</p>
+      <p><strong>Amount:</strong> ₹{{ selectedApp.requestedAmount | number:'1.0-0' }}</p>
+      <p><strong>Tenure:</strong> {{ selectedApp.requestedTenureMonths }} months</p>
+    </div>
+    <div class="form-group">
+      <label>Decision *</label>
+      <div class="decision-toggle">
+        <button [class.selected]="decision.decision === 'APPROVED'" (click)="decision.decision = 'APPROVED'">Approve</button>
+        <button [class.selected-reject]="decision.decision === 'REJECTED'" (click)="decision.decision = 'REJECTED'">Reject</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Remarks</label>
+      <textarea class="form-input" rows="3" [(ngModel)]="decision.adminRemarks" placeholder="Optional remarks for applicant..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" (click)="submitDecision()" [disabled]="deciding">
+        {{ deciding ? 'Submitting...' : 'Submit Decision' }}
+      </button>
+      <button class="btn-secondary" (click)="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>

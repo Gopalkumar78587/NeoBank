@@ -1,0 +1,612 @@
+<div class="dash-page">
+
+  <header class="dash-header">
+    <div>
+      <h1 class="page-title">
+        {{ activeTab === 'overview' ? 'Dashboard Overview' :
+           activeTab === 'accounts' ? 'Account Management' :
+           activeTab === 'users' ? 'User Management' :
+           activeTab === 'openings' ? 'New Account Approvals' :
+           activeTab === 'stats' ? 'Statistics & Charts' :
+           activeTab === 'audit' ? 'Audit Logs' :
+           'Closure Approvals' }}
+      </h1>
+      <span class="page-date">{{ currentDate | date:'fullDate' }}</span>
+    </div>
+  </header>
+
+  <nav class="dash-tabs" role="tablist">
+    <button role="tab" [class.active]="activeTab === 'overview'" (click)="switchTab('overview')">
+      <span class="material-icons-outlined">dashboard</span><span>Overview</span>
+    </button>
+    <button role="tab" [class.active]="activeTab === 'accounts'" (click)="switchTab('accounts')">
+      <span class="material-icons-outlined">account_balance</span><span>Accounts</span>
+    </button>
+    <button role="tab" [class.active]="activeTab === 'users'" (click)="switchTab('users')">
+      <span class="material-icons-outlined">people</span><span>Users</span>
+    </button>
+    <button role="tab" [class.active]="activeTab === 'openings'" (click)="switchTab('openings')">
+      <span class="material-icons-outlined">how_to_reg</span><span>New Accounts</span>
+      <span class="tab-badge" *ngIf="pendingOpenings.length > 0">{{ pendingOpenings.length }}</span>
+    </button>
+    <button role="tab" [class.active]="activeTab === 'closures'" (click)="switchTab('closures')">
+      <span class="material-icons-outlined">pending_actions</span><span>Closures</span>
+      <span class="tab-badge" *ngIf="pendingClosures.length > 0">{{ pendingClosures.length }}</span>
+    </button>
+    <button role="tab" [class.active]="activeTab === 'stats'" (click)="switchTab('stats')">
+      <span class="material-icons-outlined">bar_chart</span><span>Stats</span>
+    </button>
+    <button role="tab" [class.active]="activeTab === 'audit'" (click)="switchTab('audit')">
+      <span class="material-icons-outlined">receipt_long</span><span>Audit Logs</span>
+    </button>
+  </nav>
+
+    <div class="content-area">
+
+      <div class="msg success" *ngIf="successMessage">
+        <span class="material-icons-outlined">check_circle</span>
+        {{ successMessage }}
+      </div>
+      <div class="msg error" *ngIf="errorMessage">
+        <span class="material-icons-outlined">error</span>
+        {{ errorMessage }}
+      </div>
+
+      <!-- ------ OVERVIEW ------ -->
+      <div *ngIf="activeTab === 'overview'" class="animate-in">
+
+        <div class="stats-grid">
+          <div class="stat-card blue">
+            <div class="stat-icon">
+              <span class="material-icons-outlined">account_balance_wallet</span>
+            </div>
+            <div>
+              <span class="stat-value">{{ totalAccounts }}</span>
+              <span class="stat-label">Total Accounts</span>
+            </div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">
+              <span class="material-icons-outlined">check_circle</span>
+            </div>
+            <div>
+              <span class="stat-value">{{ activeAccounts }}</span>
+              <span class="stat-label">Active Accounts</span>
+            </div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-icon">
+              <span class="material-icons-outlined">ac_unit</span>
+            </div>
+            <div>
+              <span class="stat-value">{{ frozenAccounts }}</span>
+              <span class="stat-label">Frozen Accounts</span>
+            </div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon">
+              <span class="material-icons-outlined">group</span>
+            </div>
+            <div>
+              <span class="stat-value">{{ totalUsers }}</span>
+              <span class="stat-label">Total Users</span>
+            </div>
+          </div>
+          <div class="stat-card deep-orange">
+            <div class="stat-icon">
+              <span class="material-icons-outlined">receipt_long</span>
+            </div>
+            <div>
+              <span class="stat-value">{{ totalTransactions }}</span>
+              <span class="stat-label">Total Transactions</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-row">
+          <div class="quick-card" (click)="switchTab('accounts')">
+            <span class="material-icons-outlined">manage_accounts</span>
+            <span>Manage Accounts</span>
+          </div>
+          <div class="quick-card" (click)="switchTab('users')">
+            <span class="material-icons-outlined">group</span>
+            <span>View Users</span>
+          </div>
+          <div class="quick-card" (click)="switchTab('closures')">
+            <span class="material-icons-outlined">pending_actions</span>
+            <span>Pending Closures ({{ pendingClosures.length }})</span>
+          </div>
+          <div class="quick-card" (click)="switchTab('openings')">
+            <span class="material-icons-outlined">how_to_reg</span>
+            <span>New Accounts ({{ pendingOpenings.length }})</span>
+          </div>
+          <a routerLink="/admin/pending-approvals" class="quick-card quick-link">
+            <span class="material-icons-outlined">rate_review</span>
+            <span>Loan Approvals</span>
+          </a>
+          <a routerLink="/admin/user-management" class="quick-card quick-link">
+            <span class="material-icons-outlined">manage_accounts</span>
+            <span>User Management</span>
+          </a>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="material-icons-outlined">history</span>
+              Recent Accounts
+            </h3>
+            <button class="link-btn" (click)="switchTab('accounts')">View All &rarr;</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Account No</th>
+                  <th>Owner</th>
+                  <th>Type</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let acc of allAccounts | slice:0:5">
+                  <td class="mono">{{ acc.accountNumber }}</td>
+                  <td>
+                    <span class="owner-name">{{ acc.user?.fullName || '---' }}</span>
+                    <span class="owner-email">{{ acc.user?.email }}</span>
+                  </td>
+                  <td>
+                    <span class="type-badge" [class.savings]="acc.accountType === 'SAVINGS'" [class.current]="acc.accountType === 'CURRENT'">
+                      {{ acc.accountType }}
+                    </span>
+                  </td>
+                  <td class="balance-col">Rs {{ acc.balance | number:'1.2-2' }}</td>
+                  <td>
+                    <span class="status-badge"
+                          [class.active]="acc.status === 'ACTIVE'"
+                          [class.frozen-b]="acc.status === 'FROZEN'"
+                          [class.closed-b]="acc.status === 'CLOSED'">
+                      {{ acc.status }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="empty-inline" *ngIf="allAccounts.length === 0">No accounts found.</p>
+        </div>
+      </div>
+
+      <!-- ------ ACCOUNTS ------ -->
+      <div *ngIf="activeTab === 'accounts'" class="animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="material-icons-outlined">account_balance</span>
+              All Accounts
+            </h3>
+            <span class="result-count">{{ filteredAccounts.length }} results</span>
+          </div>
+
+          <div class="filter-bar">
+            <div class="search-wrap">
+              <span class="material-icons-outlined">search</span>
+              <input type="text" placeholder="Search by account number or email..."
+                     [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()" />
+            </div>
+            <select class="status-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+              <option value="">All Status</option>
+              <option value="ACTIVE">Active</option>
+              <option value="FROZEN">Frozen</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Account No</th>
+                  <th>Owner</th>
+                  <th>Type</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let acc of filteredAccounts"
+                    [class.row-frozen]="acc.status === 'FROZEN'"
+                    [class.row-closed]="acc.status === 'CLOSED'">
+                  <td class="mono">{{ acc.accountNumber }}</td>
+                  <td>
+                    <span class="owner-name">{{ acc.user?.fullName || '---' }}</span>
+                    <span class="owner-email">{{ acc.user?.email }}</span>
+                  </td>
+                  <td>
+                    <span class="type-badge"
+                          [class.savings]="acc.accountType === 'SAVINGS'"
+                          [class.current]="acc.accountType === 'CURRENT'">
+                      {{ acc.accountType }}
+                    </span>
+                  </td>
+                  <td class="balance-col">Rs {{ acc.balance | number:'1.2-2' }}</td>
+                  <td>
+                    <span class="status-badge"
+                          [class.active]="acc.status === 'ACTIVE'"
+                          [class.frozen-b]="acc.status === 'FROZEN'"
+                          [class.closed-b]="acc.status === 'CLOSED'">
+                      {{ acc.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-cell">
+                      <button class="act-btn freeze" *ngIf="acc.status === 'ACTIVE'"
+                              title="Freeze Account" (click)="freezeAccount(acc.id)">
+                        <span class="material-icons-outlined">ac_unit</span>
+                      </button>
+                      <button class="act-btn activate" *ngIf="acc.status === 'FROZEN'"
+                              title="Activate Account" (click)="activateAccount(acc.id)">
+                        <span class="material-icons-outlined">check_circle</span>
+                      </button>
+                      <button class="act-btn approve" *ngIf="acc.closureStatus === 'PENDING'"
+                              title="Approve Closure" (click)="approveClosure(acc.id)">
+                        <span class="material-icons-outlined">check_circle</span>
+                      </button>
+                      <button class="act-btn reject" *ngIf="acc.closureStatus === 'PENDING'"
+                              title="Reject Closure" (click)="rejectClosure(acc.id)">
+                        <span class="material-icons-outlined">cancel</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="empty-inline" *ngIf="filteredAccounts.length === 0">No accounts match your filters.</p>
+        </div>
+      </div>
+
+      <!-- ------ USERS ------ -->
+      <div *ngIf="activeTab === 'users'" class="animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="material-icons-outlined">people</span>
+              Registered Users
+            </h3>
+            <span class="result-count">{{ filteredUsers.length }} users</span>
+          </div>
+
+          <div class="filter-bar">
+            <div class="search-wrap">
+              <span class="material-icons-outlined">search</span>
+              <input type="text" placeholder="Search by name or email..."
+                     [(ngModel)]="userSearchQuery" (ngModelChange)="applyUserFilters()" />
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Total Accounts</th>
+                  <th>Active Accounts</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let u of filteredUsers">
+                  <td>
+                    <div class="user-name-cell">
+                      <div class="user-avatar-sm">{{ (u.fullName || u.email || '?').charAt(0) | uppercase }}</div>
+                      <span class="owner-name">{{ u.fullName || '---' }}</span>
+                    </div>
+                  </td>
+                  <td>{{ u.email }}</td>
+                  <td>
+                    <span class="role-pill" [class.admin-role]="u.role === 'ADMIN'">{{ u.role }}</span>
+                  </td>
+                  <td>{{ u.totalAccounts }}</td>
+                  <td>{{ u.activeAccounts }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="empty-inline" *ngIf="filteredUsers.length === 0">No users found.</p>
+        </div>
+      </div>
+
+      <!-- ------ NEW ACCOUNT OPENINGS ------ -->
+      <div *ngIf="activeTab === 'openings'" class="animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="material-icons-outlined">how_to_reg</span>
+              New Account Opening Requests
+            </h3>
+            <span class="result-count">{{ pendingOpenings.length }} pending</span>
+          </div>
+
+          <div class="table-wrap" *ngIf="pendingOpenings.length > 0">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Type</th>
+                  <th>Branch</th>
+                  <th>Initial Deposit</th>
+                  <th>Nominee</th>
+                  <th>Services</th>
+                  <th>Applied</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let acc of pendingOpenings" class="row-pending">
+                  <td>
+                    <span class="owner-name">{{ acc.user?.fullName || '---' }}</span>
+                    <span class="owner-email">{{ acc.user?.email }}</span>
+                  </td>
+                  <td>
+                    <span class="type-badge"
+                          [class.savings]="acc.accountType === 'SAVINGS'"
+                          [class.current]="acc.accountType === 'CURRENT'">
+                      {{ acc.accountType }}
+                    </span>
+                  </td>
+                  <td>{{ acc.branchPreference || 'Auto' }}</td>
+                  <td class="balance-col">Rs {{ acc.pendingDeposit | number:'1.2-2' }}</td>
+                  <td>
+                    <div *ngIf="acc.nomineeName">
+                      <strong>{{ acc.nomineeName }}</strong>
+                      <div style="font-size:11px;color:#6b7280">{{ acc.nomineeRelation }}</div>
+                    </div>
+                    <span *ngIf="!acc.nomineeName" style="color:#9ca3af">—</span>
+                  </td>
+                  <td style="font-size:11px;color:#374151">
+                    <span *ngIf="acc.debitCardRequired" title="Debit Card">💳</span>
+                    <span *ngIf="acc.chequeBookRequired" title="Cheque Book">📑</span>
+                    <span *ngIf="acc.netBankingRequired" title="Net Banking">💻</span>
+                    <div *ngIf="acc.purpose" style="font-size:10.5px;color:#6b7280;margin-top:2px">{{ acc.purpose }}</div>
+                  </td>
+                  <td style="font-size:11.5px;color:#6b7280">{{ acc.createdAt | date:'MMM d, y' }}</td>
+                  <td>
+                    <div class="action-cell">
+                      <button class="act-btn approve" title="Approve Opening"
+                              (click)="approveOpening(acc.id)">
+                        <span class="material-icons-outlined">check</span>
+                      </button>
+                      <button class="act-btn reject" title="Reject Opening"
+                              (click)="rejectOpening(acc.id)">
+                        <span class="material-icons-outlined">close</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="empty-inline" *ngIf="pendingOpenings.length === 0">
+            No pending account-opening requests. All clear!
+          </p>
+        </div>
+      </div>
+
+      <!-- ------ CLOSURES ------ -->
+      <div *ngIf="activeTab === 'closures'" class="animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="material-icons-outlined">pending_actions</span>
+              Pending Closure Requests
+            </h3>
+            <span class="result-count">{{ pendingClosures.length }} pending</span>
+          </div>
+
+          <div class="table-wrap" *ngIf="pendingClosures.length > 0">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Account No</th>
+                  <th>Owner</th>
+                  <th>Type</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let acc of pendingClosures" class="row-pending">
+                  <td class="mono">{{ acc.accountNumber }}</td>
+                  <td>
+                    <span class="owner-name">{{ acc.user?.fullName || '---' }}</span>
+                    <span class="owner-email">{{ acc.user?.email }}</span>
+                  </td>
+                  <td>
+                    <span class="type-badge"
+                          [class.savings]="acc.accountType === 'SAVINGS'"
+                          [class.current]="acc.accountType === 'CURRENT'">
+                      {{ acc.accountType }}
+                    </span>
+                  </td>
+                  <td class="balance-col">Rs {{ acc.balance | number:'1.2-2' }}</td>
+                  <td>
+                    <span class="status-badge pending-b">PENDING CLOSURE</span>
+                  </td>
+                  <td>
+                    <div class="action-cell">
+                      <button class="act-btn approve" title="Approve Closure"
+                              (click)="approveClosure(acc.id)">
+                        <span class="material-icons-outlined">check</span>
+                      </button>
+                      <button class="act-btn reject" title="Reject Closure"
+                              (click)="rejectClosure(acc.id)">
+                        <span class="material-icons-outlined">close</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="empty-inline" *ngIf="pendingClosures.length === 0">
+            No pending closure requests. All clear!
+          </p>
+        </div>
+      </div>
+
+      <!-- ══════ STATS CHART ══════ -->
+      <div *ngIf="activeTab === 'stats'" class="animate-in">
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" *ngIf="stats">
+          <div class="stat-card blue">
+            <div class="stat-icon"><span class="material-icons-outlined">account_balance_wallet</span></div>
+            <div>
+              <span class="stat-value">{{ stats.totalAccounts }}</span>
+              <span class="stat-label">Total Accounts</span>
+            </div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon"><span class="material-icons-outlined">people</span></div>
+            <div>
+              <span class="stat-value">{{ stats.totalUsers }}</span>
+              <span class="stat-label">Total Users</span>
+            </div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-icon"><span class="material-icons-outlined">swap_horiz</span></div>
+            <div>
+              <span class="stat-value">{{ stats.totalTransactions }}</span>
+              <span class="stat-label">Total Transactions</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="panel" *ngIf="statsChartBars.length > 0">
+          <div class="panel-header">
+            <h3>
+              <span class="material-icons-outlined">bar_chart</span>
+              Platform Overview
+            </h3>
+          </div>
+          <div class="chart-container">
+            <div class="chart-bar-row" *ngFor="let bar of statsChartBars">
+              <span class="chart-label">{{ bar.label }}</span>
+              <div class="chart-track">
+                <div class="chart-fill" [style.width.%]="bar.percent" [style.background]="bar.color"></div>
+              </div>
+              <span class="chart-value">{{ bar.value }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra stat details -->
+        <div class="panel" *ngIf="stats">
+          <div class="panel-header">
+            <h3>
+              <span class="material-icons-outlined">info</span>
+              Detailed Breakdown
+            </h3>
+          </div>
+          <div class="stats-detail-grid">
+            <div class="stats-detail-item">
+              <span class="stats-detail-label">Active Accounts</span>
+              <span class="stats-detail-value green-text">{{ stats.activeAccounts }}</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="stats-detail-label">Frozen Accounts</span>
+              <span class="stats-detail-value blue-text">{{ stats.frozenAccounts }}</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="stats-detail-label">Closed Accounts</span>
+              <span class="stats-detail-value red-text">{{ stats.closedAccounts }}</span>
+            </div>
+            <div class="stats-detail-item" *ngIf="stats.totalBalance !== undefined">
+              <span class="stats-detail-label">Total Balance</span>
+              <span class="stats-detail-value">Rs {{ stats.totalBalance | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="empty-inline" *ngIf="!stats">Loading stats...</p>
+      </div>
+
+      <!-- ══════ AUDIT LOGS ══════ -->
+      <div *ngIf="activeTab === 'audit'" class="animate-in">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="material-icons-outlined">receipt_long</span>
+              Audit Logs
+            </h3>
+            <span class="result-count">{{ auditLogsTotal }} entries</span>
+          </div>
+
+          <div class="filter-bar">
+            <div class="search-wrap">
+              <span class="material-icons-outlined">filter_list</span>
+              <input type="text" placeholder="Filter by action (e.g. FREEZE, ACTIVATE, CLOSE)..."
+                     [(ngModel)]="auditActionFilter" (ngModelChange)="onAuditFilterChange()" />
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Action</th>
+                  <th>Performed By</th>
+                  <th>Target Account</th>
+                  <th>Details</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let log of auditLogs">
+                  <td class="mono">{{ log.id }}</td>
+                  <td>
+                    <span class="audit-action-badge"
+                          [class.action-freeze]="log.action === 'FREEZE'"
+                          [class.action-activate]="log.action === 'ACTIVATE'"
+                          [class.action-close]="log.action === 'CLOSE' || log.action === 'APPROVE_CLOSURE'"
+                          [class.action-create]="log.action === 'CREATE'"
+                          [class.action-reject]="log.action === 'REJECT_CLOSURE'">
+                      {{ log.action }}
+                    </span>
+                  </td>
+                  <td>{{ log.performedBy || log.adminEmail || '---' }}</td>
+                  <td class="mono">{{ log.accountNumber || log.targetAccountId || '---' }}</td>
+                  <td>{{ log.details || log.description || '---' }}</td>
+                  <td>{{ log.timestamp || log.createdAt | date:'medium' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="empty-inline" *ngIf="auditLogs.length === 0 && !auditLoading">No audit logs found.</p>
+          <p class="empty-inline" *ngIf="auditLoading">Loading...</p>
+
+          <!-- Pagination -->
+          <div class="pagination-bar" *ngIf="auditLogsTotal > auditSize">
+            <button class="page-btn" (click)="auditPrevPage()" [disabled]="auditPage === 0">
+              <span class="material-icons-outlined">chevron_left</span> Previous
+            </button>
+            <span class="page-info">Page {{ auditPage + 1 }} of {{ auditTotalPages }}</span>
+            <button class="page-btn" (click)="auditNextPage()" [disabled]="auditPage + 1 >= auditTotalPages">
+              Next <span class="material-icons-outlined">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+</div>

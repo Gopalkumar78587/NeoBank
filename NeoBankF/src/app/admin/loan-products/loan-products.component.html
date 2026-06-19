@@ -1,0 +1,70 @@
+<div class="admin-container">
+  <div class="page-header">
+    <h2>Loan Products</h2>
+    <button class="btn-primary" (click)="toggleForm()">{{ showForm ? 'Cancel' : '+ Add Product' }}</button>
+  </div>
+
+  <div *ngIf="success" class="alert success">{{ success }}</div>
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+
+  <!-- Create Form -->
+  <div class="form-card" *ngIf="showForm">
+    <h3>New Loan Product</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Product Name *</label>
+        <input class="form-input" [(ngModel)]="form.productName" placeholder="e.g. Home Loan" />
+      </div>
+      <div class="form-group">
+        <label>Annual Interest Rate (%) *</label>
+        <input class="form-input" type="number" [(ngModel)]="form.annualInterestRate" placeholder="e.g. 8.5" min="0.01" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Min Amount (₹) *</label>
+        <input class="form-input" type="number" [(ngModel)]="form.minAmount" placeholder="e.g. 50000" min="1" />
+      </div>
+      <div class="form-group">
+        <label>Max Amount (₹) *</label>
+        <input class="form-input" type="number" [(ngModel)]="form.maxAmount" placeholder="e.g. 5000000" />
+      </div>
+      <div class="form-group full-width">
+        <label>Allowed Tenures (months, comma-separated) *</label>
+        <input class="form-input" [(ngModel)]="form.allowedTenures" placeholder="e.g. 12,24,36,60" />
+        <span class="hint">Enter monthly tenures customers can choose from, e.g. 12,24,36,60</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" (click)="submit()" [disabled]="submitting">
+        {{ submitting ? 'Creating...' : 'Create Product' }}
+      </button>
+      <button class="btn-secondary" (click)="toggleForm()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div *ngIf="loading" class="loading">Loading products...</div>
+  <div *ngIf="!loading && products.length === 0 && !showForm" class="no-data">No loan products configured yet.</div>
+
+  <table class="data-table" *ngIf="!loading && products.length > 0">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Product Name</th>
+        <th>Interest Rate</th>
+        <th>Min Amount</th>
+        <th>Max Amount</th>
+        <th>Allowed Tenures</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of products">
+        <td>{{ p.id }}</td>
+        <td><strong>{{ p.productName }}</strong></td>
+        <td>{{ p.annualInterestRate }}% p.a.</td>
+        <td>₹{{ p.minAmount | number:'1.0-0' }}</td>
+        <td>₹{{ p.maxAmount | number:'1.0-0' }}</td>
+        <td>{{ p.allowedTenures.join(', ') }} months</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

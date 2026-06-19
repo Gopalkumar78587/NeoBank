@@ -1,0 +1,97 @@
+<div class="rs-wrap">
+
+  <!-- Header -->
+  <div class="rs-header">
+    <div class="rs-header-left">
+      <a routerLink="/loans/my-loans" class="back-btn">
+        <span class="material-icons-outlined">arrow_back</span> Back to My Loans
+      </a>
+      <h1>EMI Repayment Schedule</h1>
+      <p>Loan Account <strong>#{{ loanAccountId }}</strong></p>
+    </div>
+    <div class="progress-card" *ngIf="instalments.length > 0">
+      <div class="pc-circle">
+        <svg viewBox="0 0 36 36">
+          <path class="pc-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path class="pc-fill" [attr.stroke-dasharray]="progressPct + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <text x="18" y="20.35" class="pc-text">{{ progressPct }}%</text>
+        </svg>
+      </div>
+      <div class="pc-info">
+        <div class="pc-val">{{ totalPaid }} / {{ instalments.length }}</div>
+        <div class="pc-label">EMIs Completed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-error" *ngIf="error"><span class="material-icons-outlined">error_outline</span> {{ error }}</div>
+  <div class="loading-state" *ngIf="loading"><span class="material-icons-outlined spinning">sync</span> Loading schedule...</div>
+  <div class="empty-state" *ngIf="!loading && instalments.length === 0 && !error">
+    <span class="material-icons-outlined">calendar_view_month</span>
+    <p>No repayment data found for this loan account.</p>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="summary-strip" *ngIf="!loading && instalments.length > 0">
+    <div class="ss-item">
+      <div class="ss-icon paid-icon"><span class="material-icons-outlined">check_circle</span></div>
+      <div><div class="ss-val">{{ totalPaid }}</div><div class="ss-label">Paid</div></div>
+    </div>
+    <div class="ss-item">
+      <div class="ss-icon pending-icon"><span class="material-icons-outlined">schedule</span></div>
+      <div><div class="ss-val">{{ instalments.length - totalPaid }}</div><div class="ss-label">Remaining</div></div>
+    </div>
+    <div class="ss-item">
+      <div class="ss-icon emi-icon"><span class="material-icons-outlined">currency_rupee</span></div>
+      <div><div class="ss-val">₹{{ instalments[0]?.emiAmount | number:'1.0-0' }}</div><div class="ss-label">EMI Amount</div></div>
+    </div>
+  </div>
+
+  <!-- Schedule Panel -->
+  <div class="schedule-panel" *ngIf="!loading && instalments.length > 0">
+    <div class="schedule-row schedule-head">
+      <div class="col-no">#</div>
+      <div class="col-date">Due Date</div>
+      <div class="col-emi">EMI Amount</div>
+      <div class="col-principal">Principal</div>
+      <div class="col-interest">Interest</div>
+      <div class="col-status">Status</div>
+      <div class="col-paid">Paid On</div>
+      <div class="col-action">Action</div>
+    </div>
+
+    <div class="schedule-row"
+         *ngFor="let inst of instalments"
+         [class.row-paid]="inst.paymentStatus === 'PAID'"
+         [class.row-overdue]="inst.paymentStatus === 'OVERDUE'">
+      <div class="col-no">
+        <div class="inst-number" [class.in-paid]="inst.paymentStatus === 'PAID'" [class.in-overdue]="inst.paymentStatus === 'OVERDUE'">
+          {{ inst.instalmentNumber }}
+        </div>
+      </div>
+      <div class="col-date"><div class="date-main">{{ inst.dueDate | date:'dd MMM yyyy' }}</div></div>
+      <div class="col-emi"><strong>₹{{ inst.emiAmount | number:'1.2-2' }}</strong></div>
+      <div class="col-principal">₹{{ inst.principalComponent | number:'1.2-2' }}</div>
+      <div class="col-interest">₹{{ inst.interestComponent | number:'1.2-2' }}</div>
+      <div class="col-status">
+        <span [class]="statusClass(inst.paymentStatus)" class="status-pill-sm">{{ inst.paymentStatus }}</span>
+      </div>
+      <div class="col-paid">
+        <span *ngIf="inst.paidAt" class="paid-date">{{ inst.paidAt | date:'dd MMM yy' }}</span>
+        <span *ngIf="!inst.paidAt" class="na">—</span>
+      </div>
+      <div class="col-action">
+        <button *ngIf="inst.paymentStatus !== 'PAID'"
+                class="pay-btn" (click)="pay(inst.id)"
+                [disabled]="payingId === inst.id">
+          <span class="material-icons-outlined">{{ payingId === inst.id ? 'hourglass_empty' : 'payment' }}</span>
+          {{ payingId === inst.id ? '...' : 'Pay' }}
+        </button>
+        <div *ngIf="inst.paymentStatus === 'PAID'" class="paid-check">
+          <span class="material-icons-outlined">check_circle</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

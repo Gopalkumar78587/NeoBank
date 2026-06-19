@@ -1,0 +1,50 @@
+﻿.analytics-layout { background: #f5f7fb; min-height: 100vh; font-family: "Inter", sans-serif; }
+.top-nav { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 14px 28px; box-shadow: 0 2px 12px rgba(0,0,0,.07); position: sticky; top: 0; z-index: 10; }
+.back-link { display: flex; align-items: center; color: #4f46e5; text-decoration: none; margin-right: 12px; }
+.page-title { display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: 800; color: #1a1a2e; margin: 0; }
+.title-icon { color: #4f46e5; font-size: 1.5rem; }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg,#4f46e5,#4338ca); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
+.user-name { font-weight: 600; color: #333; }
+.nav-left { display: flex; align-items: center; }
+
+.main-content { max-width: 1400px; margin: 0 auto; padding: 22px 28px 40px; }
+.section { margin-bottom: 32px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.section-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 800; color: #1a1a2e; margin: 0 0 16px; }
+.refresh-btn { display: flex; align-items: center; gap: 5px; background: #e8f0fe; color: #4f46e5; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.88rem; }
+.go-btn { display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg,#4f46e5,#4338ca); color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.insights-grid { grid-template-columns: repeat(3, 1fr); }
+@media(max-width: 768px) { .insights-grid { grid-template-columns: 1fr; } }
+
+.kpi-card { background: #fff; border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); transition: transform .2s; }
+.kpi-card:hover { transform: translateY(-3px); }
+.kpi-icon-wrap { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.kpi-icon-wrap.green { background: #e8f5e9; color: #2E7D32; }
+.kpi-icon-wrap.red { background: #fce4ec; color: #C62828; }
+.kpi-icon-wrap.blue { background: #eef2ff; color: #4338ca; }
+.kpi-icon-wrap.amber { background: #fff3e0; color: #e65100; }
+.kpi-icon-wrap.purple { background: #f3e5f5; color: #6a1b9a; }
+.kpi-icon-wrap span { font-size: 1.5rem; }
+.kpi-info { display: flex; flex-direction: column; }
+.kpi-label { font-size: 0.8rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-value { font-size: 1.35rem; font-weight: 800; color: #1a1a2e; }
+.kpi-value small { font-size: 0.75rem; font-weight: 600; color: #777; }
+
+.income-card { border-left: 4px solid #2E7D32; }
+.expense-card { border-left: 4px solid #C62828; }
+.savings-positive { border-left: 4px solid #4338ca; }
+.savings-negative { border-left: 4px solid #C62828; }
+.negative-val { color: #C62828 !important; }
+
+.chart-card { background: #fff; border-radius: 18px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,.07); margin-top: 20px; }
+.chart-title { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0 0 20px; }
+.chart-wrap { height: 280px; position: relative; }
+
+.error-card { background: #fce4ec; border: 1.5px solid #e57373; border-radius: 12px; padding: 18px 20px; color: #c62828; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+
+.skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.skeleton-card { background: linear-gradient(90deg, #e8eaf6 25%, #f5f7fb 50%, #e8eaf6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 16px; height: 90px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }

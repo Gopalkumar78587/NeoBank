@@ -1,0 +1,24 @@
+<h2>My Accounts</h2>
+
+<div class="card">
+  <h3>Create New Account</h3>
+
+  <label>Account Type</label>
+  <select [(ngModel)]="accountForm.accountType">
+    <option value="SAVINGS">Savings</option>
+    <option value="CURRENT">Current</option>
+  </select>
+
+  <label>Initial Deposit</label>
+  <input type="number" [(ngModel)]="accountForm.initialDeposit" />
+
+  <button (click)="createAccount()">Create Account</button>
+</div>
+
+<div class="accounts-grid">
+  <div class="account-box" *ngFor="let acc of accounts">
+    <p><b>Account No:</b> {{ acc.maskedAccountNumber }}</p>
+    <p><b>Type:</b> {{ acc.accountType }}</p>
+    <p class="balance">₹ {{ acc.balance }}</p>
+  </div>
+</div>

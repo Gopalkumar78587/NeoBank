@@ -1,0 +1,281 @@
+<div class="apply-wrapper">
+
+  <!-- Hero Banner -->
+  <div class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1>Smart Loan Solutions</h1>
+        <p>Apply in 3 easy steps — competitive rates, flexible tenures, instant decisions</p>
+      </div>
+      <div class="hero-pills">
+        <span class="pill"><span class="material-icons-outlined">speed</span> Quick Approval</span>
+        <span class="pill"><span class="material-icons-outlined">lock</span> Secure</span>
+        <span class="pill"><span class="material-icons-outlined">percent</span> Low Rates</span>
+      </div>
+    </div>
+    <a routerLink="/loans/my-loans" class="btn-ghost-white">
+      <span class="material-icons-outlined">list_alt</span> My Loans
+    </a>
+  </div>
+
+  <div class="apply-body">
+
+    <!-- Progress Stepper -->
+    <div class="stepper-wrap">
+      <div class="stepper-step" [class.active]="step >= 1" [class.done]="step > 1">
+        <div class="step-circle">
+          <span class="material-icons-outlined" *ngIf="step > 1">check</span>
+          <span *ngIf="step <= 1">1</span>
+        </div>
+        <div class="step-info">
+          <div class="step-name">Choose Product</div>
+          <div class="step-desc">Select loan type</div>
+        </div>
+      </div>
+      <div class="step-connector" [class.active]="step >= 2"></div>
+      <div class="stepper-step" [class.active]="step >= 2" [class.done]="step > 2">
+        <div class="step-circle">
+          <span class="material-icons-outlined" *ngIf="step > 2">check</span>
+          <span *ngIf="step <= 2">2</span>
+        </div>
+        <div class="step-info">
+          <div class="step-name">Loan Details</div>
+          <div class="step-desc">Amount & tenure</div>
+        </div>
+      </div>
+      <div class="step-connector" [class.active]="step >= 3"></div>
+      <div class="stepper-step" [class.active]="step >= 3">
+        <div class="step-circle">3</div>
+        <div class="step-info">
+          <div class="step-name">Review & Apply</div>
+          <div class="step-desc">Confirm details</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alert error-alert" *ngIf="error">
+      <span class="material-icons-outlined">error_outline</span> {{ error }}
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="success-card" *ngIf="success">
+      <div class="success-icon"><span class="material-icons-outlined">task_alt</span></div>
+      <h2>Application Submitted!</h2>
+      <p>Your loan application is under review. You'll be notified once a decision is made.</p>
+      <div class="success-actions">
+        <a routerLink="/loans/my-loans" class="btn-primary-lg">
+          <span class="material-icons-outlined">visibility</span> View My Applications
+        </a>
+        <a routerLink="/loans/dashboard" class="btn-outline-lg">Go to Dashboard</a>
+      </div>
+    </div>
+
+    <!-- STEP 1 — Product Selection -->
+    <div class="step-panel" *ngIf="step === 1 && !success">
+      <div class="step-panel-header">
+        <h2>Choose Your Loan Product</h2>
+        <p>Select the loan that best fits your financial goals</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="products.length === 0">
+        <div class="empty-icon-wrap"><span class="material-icons-outlined">inventory_2</span></div>
+        <h3>No Loan Products Available</h3>
+        <p>The bank administrator hasn't configured any loan products yet. Please check back later or contact support.</p>
+        <a routerLink="/loans/dashboard" class="btn-outline-lg">Go to Dashboard</a>
+      </div>
+
+      <div class="product-grid" *ngIf="products.length > 0">
+        <div class="product-card" *ngFor="let p of products; let i = index" (click)="selectProduct(p)">
+          <div class="card-top-band" [class]="'band-' + (i % 4)"></div>
+          <div class="card-icon-wrap" [class]="'icon-' + (i % 4)">
+            <span class="material-icons-outlined">{{ ['home','directions_car','school','business_center'][i % 4] }}</span>
+          </div>
+          <div class="product-name">{{ p.productName }}</div>
+          <div class="product-rate">
+            <span class="rate-num">{{ p.annualInterestRate }}%</span>
+            <span class="rate-label">p.a. interest</span>
+          </div>
+          <div class="product-details-grid">
+            <div class="pd-item">
+              <span class="pd-label">Min Amount</span>
+              <span class="pd-val">₹{{ p.minAmount | number:'1.0-0' }}</span>
+            </div>
+            <div class="pd-item">
+              <span class="pd-label">Max Amount</span>
+              <span class="pd-val">₹{{ p.maxAmount | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="tenure-chips">
+            <span class="tenure-chip" *ngFor="let t of p.allowedTenures">{{ t }} mo</span>
+          </div>
+          <button class="select-btn">
+            Select <span class="material-icons-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 — Amount & Tenure -->
+    <div class="step-panel" *ngIf="step === 2 && !success && selectedProduct">
+      <div class="step-panel-header">
+        <h2>Configure Your Loan</h2>
+        <p>Set the amount and tenure for <strong>{{ selectedProduct.productName }}</strong></p>
+      </div>
+
+      <div class="config-layout">
+        <!-- Left: Form -->
+        <div class="config-form">
+          <div class="field-group">
+            <label class="field-label">
+              <span class="material-icons-outlined">currency_rupee</span> Loan Amount
+            </label>
+            <div class="amount-input-wrap">
+              <span class="currency-prefix">₹</span>
+              <input type="number" [(ngModel)]="requestedAmount"
+                     [min]="selectedProduct.minAmount"
+                     [max]="selectedProduct.maxAmount"
+                     class="amount-input" (input)="updateEmiPreview()" />
+            </div>
+            <div class="preset-chips">
+              <button type="button" class="preset-chip" (click)="setAmountPreset(0)">Min</button>
+              <button type="button" class="preset-chip" (click)="setAmountPreset(0.25)">25%</button>
+              <button type="button" class="preset-chip" (click)="setAmountPreset(0.5)">50%</button>
+              <button type="button" class="preset-chip" (click)="setAmountPreset(0.75)">75%</button>
+              <button type="button" class="preset-chip" (click)="setAmountPreset(1)">Max</button>
+            </div>
+            <div class="range-track">
+              <input type="range" [(ngModel)]="requestedAmount"
+                     [min]="selectedProduct.minAmount"
+                     [max]="selectedProduct.maxAmount"
+                     [step]="getRangeStep()"
+                     class="amount-slider" (input)="updateEmiPreview()" />
+              <div class="range-labels">
+                <span>₹{{ selectedProduct.minAmount | number:'1.0-0' }}</span>
+                <span>₹{{ selectedProduct.maxAmount | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">
+              <span class="material-icons-outlined">calendar_month</span> Tenure
+            </label>
+            <div class="tenure-options">
+              <button *ngFor="let t of selectedProduct.allowedTenures"
+                      class="tenure-option"
+                      [class.selected]="selectedTenure === t"
+                      (click)="selectedTenure = t; updateEmiPreview()">
+                {{ t }} months
+              </button>
+            </div>
+          </div>
+
+          <div class="btn-row-spaced">
+            <button class="btn-back" (click)="goBack()">
+              <span class="material-icons-outlined">arrow_back</span> Back
+            </button>
+            <button class="btn-next" (click)="nextStep()">
+              Continue <span class="material-icons-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: EMI Preview Card -->
+        <div class="emi-preview-card" *ngIf="selectedTenure">
+          <div class="emi-card-header">
+            <span class="material-icons-outlined">calculate</span>
+            <span>EMI Estimate</span>
+          </div>
+          <div class="emi-big">
+            {{ calculateEMI(requestedAmount, selectedProduct.annualInterestRate, selectedTenure!) }}
+            <span class="emi-unit">/month</span>
+          </div>
+          <div class="emi-breakdown">
+            <div class="eb-row">
+              <span>Principal</span>
+              <span>₹{{ requestedAmount | number:'1.0-0' }}</span>
+            </div>
+            <div class="eb-row">
+              <span>Interest Rate</span>
+              <span>{{ selectedProduct.annualInterestRate }}% p.a.</span>
+            </div>
+            <div class="eb-row">
+              <span>Duration</span>
+              <span>{{ selectedTenure }} months</span>
+            </div>
+            <div class="eb-row total-row">
+              <span>Total Payable</span>
+              <span>{{ getTotalPayable(requestedAmount, selectedProduct.annualInterestRate, selectedTenure!) }}</span>
+            </div>
+          </div>
+          <div class="emi-note">
+            <span class="material-icons-outlined">info_outline</span>
+            Estimated figures. Actual EMI will be calculated at disbursement.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 — Review & Submit -->
+    <div class="step-panel" *ngIf="step === 3 && !success && selectedProduct">
+      <div class="step-panel-header">
+        <h2>Review Your Application</h2>
+        <p>Please verify all details before submitting</p>
+      </div>
+
+      <div class="review-layout">
+        <div class="review-card-new">
+          <div class="review-card-title">
+            <span class="material-icons-outlined">description</span> Application Summary
+          </div>
+          <div class="review-rows">
+            <div class="rr">
+              <span class="rr-label">Loan Product</span>
+              <span class="rr-val">{{ selectedProduct.productName }}</span>
+            </div>
+            <div class="rr">
+              <span class="rr-label">Requested Amount</span>
+              <span class="rr-val primary">₹{{ requestedAmount | number:'1.0-0' }}</span>
+            </div>
+            <div class="rr">
+              <span class="rr-label">Tenure</span>
+              <span class="rr-val">{{ selectedTenure }} months</span>
+            </div>
+            <div class="rr">
+              <span class="rr-label">Annual Interest Rate</span>
+              <span class="rr-val">{{ selectedProduct.annualInterestRate }}% p.a.</span>
+            </div>
+            <div class="rr emi-highlight-row">
+              <span class="rr-label">Estimated Monthly EMI</span>
+              <span class="rr-val emi-value">
+                {{ calculateEMI(requestedAmount, selectedProduct.annualInterestRate, selectedTenure!) }}
+              </span>
+            </div>
+            <div class="rr">
+              <span class="rr-label">Total Payable</span>
+              <span class="rr-val">{{ getTotalPayable(requestedAmount, selectedProduct.annualInterestRate, selectedTenure!) }}</span>
+            </div>
+          </div>
+
+          <div class="review-disclaimer">
+            <span class="material-icons-outlined">shield</span>
+            By submitting, you agree that the information provided is accurate and you consent to a loan eligibility check.
+          </div>
+
+          <div class="btn-row-spaced">
+            <button class="btn-back" (click)="goBack()">
+              <span class="material-icons-outlined">arrow_back</span> Edit Details
+            </button>
+            <button class="btn-submit" (click)="submit()" [disabled]="loading">
+              <span class="material-icons-outlined">{{ loading ? 'hourglass_empty' : 'send' }}</span>
+              {{ loading ? 'Submitting...' : 'Submit Application' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
